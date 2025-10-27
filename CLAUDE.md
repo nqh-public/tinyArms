@@ -2,7 +2,7 @@
 
 **Inherits From**: `/Users/huy/CODES/nqh/CLAUDE.md`
 
-This file contains tinyArms-specific overrides only. For constitutional principles, behavioral patterns, and shared code protocols, see the root CLAUDE.md.
+tinyArms-specific overrides only. For constitutional principles, behavioral patterns, and shared code protocols, see the root CLAUDE.md.
 
 ---
 
@@ -13,7 +13,7 @@ This file contains tinyArms-specific overrides only. For constitutional principl
 **What exists**:
 - ✅ Complete architecture design (4-level tiered routing)
 - ✅ Type definitions (TypeScript interfaces)
-- ✅ Model research (`embeddinggemma:300m` decided for Level 1)
+- ✅ Model research (embeddinggemma, Qwen variants decided)
 - ✅ Configuration examples (YAML structure)
 
 **What does NOT exist**:
@@ -33,228 +33,52 @@ This file contains tinyArms-specific overrides only. For constitutional principl
 **Key Design**: 100% offline, memory-optimized for 8-16GB Macs, tiered routing (fast rules before expensive AI).
 
 **Core Use Cases**:
-1. Rename screenshots intelligently (`Screenshot 2024.png` → `hero-mockup-mobile.png`)
-2. Lint code against constitutional principles
+1. Lint code against constitutional principles (pre-commit, 2-3s)
+2. Rename screenshots intelligently
 3. Track changes in `.specify/memory/` documentation
-4. Convert voice transcriptions to structured data
+4. Convert voice transcriptions to structured actions
 
 ---
 
-## Architecture
+## Documentation Structure
 
-### Tiered Routing (Performance-First)
+**Phase 0 (Foundation)**:
+- `docs/00-OVERVIEW.md` - What, why, how it works
+- `docs/00-GETTING-STARTED.md` - Prerequisites, first run
 
-```
-Level 0: Deterministic Rules (<1ms, 60-75% coverage)
-├─ File extension detection, regex patterns
-└─ No AI, pure logic
+**Phase 1 (Core)**:
+- `docs/01-ARCHITECTURE.md` - Tiered routing, skills, MCP
+- `docs/01-MODELS.md` - All model decisions + benchmarks
 
-Level 1: Tiny Embeddings (<100ms, 20-25% coverage)
-├─ Model: embeddinggemma:300m (200MB)
-├─ Purpose: Semantic classification, intent extraction
-└─ Install: ollama pull embeddinggemma:300m
+**Phase 2 (Setup)**:
+- `docs/02-INSTALLATION.md` - Install steps
+- `docs/02-CONFIGURATION.md` - Config examples
+- `docs/02-TROUBLESHOOTING.md` - Common issues
 
-Level 2: Small Generalists (2-4s, 5-10% coverage)
-├─ Model: Gemma 2 2B (1.5GB) [under research]
-└─ Purpose: Complex file naming, NL tasks
+**Phase 3 (Features)**:
+- `docs/03-SKILLS.md` - What each skill does
+- `docs/03-INTEGRATIONS.md` - MacWhisper, Claude Code, jan-nano-4b
 
-Level 3: Code Specialists (10-15s, <5% coverage, idle-only)
-├─ Model: Qwen2.5-Coder 7B (4.7GB) [under research]
-├─ Trigger: Only when idle + AC power + 7GB free RAM
-└─ Purpose: Code linting against constitution
-```
+**Phase 4 (Design)**:
+- `docs/04-launchagent-ideations.md` - Automation strategies
+- `docs/04-mcp-server-ideations.md` - MCP integration design
+- `docs/04-swiftui-app-ideations.md` - GUI mockups
 
-**Performance Targets** (untested estimates):
-- Accuracy: 90% overall (human-reviewable)
-- Battery impact: 1-5%/day
-- Memory peak: 1.8GB (8GB Mac), 9.5GB (16GB Mac)
-
-**Full model research**: See `docs/MODEL-OPTIONS.md` (20+ models compared)
+**Archive**: `docs/archive/` - Old consolidated files (IMPLEMENTATION.md, MODEL-DECISIONS.md, etc.)
 
 ---
 
-## MCP Integration (Bidirectional)
+## Model Decisions
 
-**AI agents → tinyArms**: Claude Code/Aider/Cursor call tinyArms tools via MCP
-**tinyArms → Other MCP servers**: Access Figma, GitHub, databases to enhance skills
+**Current Status** (2025-10-27):
+- **Level 1**: embeddinggemma:300m (200MB) - semantic routing
+- **Level 2 Primary**: Qwen2.5-Coder-3B-Instruct (1.9GB) - code linting
+- **Level 2 Secondary**: Qwen3-4B-Instruct (2.5GB, optional) - general tasks
+- **Level 2 Specialists**: Gemma 3 4B (2.3GB, optional) - file naming, markdown, audio
+- **Level 3**: Qwen2.5-Coder 7B (4.7GB, optional) - deep analysis
+- **Research**: jan-nano-4b (4.3GB, optional) - MCP tool-use research
 
-**Example**:
-```
-Claude Code: "Lint this file"
-  ↓
-tinyArms (Qwen 7B) + GitHub MCP (fetch PR context)
-  ↓
-Returns: Constitutional violations with line refs
-```
-
----
-
-## Memory Requirements
-
-### 8GB RAM Mac
-- **Levels 0-2**: 1.8GB total ✅ SAFE
-- **Level 3**: Runs ONLY on idle/AC power (4.7GB model + 3GB KV cache = ~8GB peak)
-
-### 16GB RAM Mac
-- **All levels**: ~9.5GB peak ✅ SAFE (6GB free under load)
-
-**Critical**: Heavy models (Level 3) use idle-only scheduling:
-```yaml
-code-linting:
-  schedule:
-    type: idle_only
-    min_idle_minutes: 15
-    require_ac_power: true
-    min_free_memory_gb: 7
-```
-
----
-
-## Skills (Pseudo Code)
-
-1. **file-naming** - Rename screenshots/downloads
-2. **code-linting** - Enforce constitutional principles
-3. **markdown-analysis** - Track `.specify/memory/` changes
-4. **voice-actions** - Process transcriptions
-
-**Adding skills**:
-1. Create `.md` prompt template in `skills/`
-2. Update `config.yaml` with skill definition
-3. Implement routing logic in core engine
-
----
-
-## Models
-
-### ✅ Level 1 (Decided)
-
-**Model**: `embeddinggemma:300m`
-**Size**: 200MB
-**Role**: Semantic understanding for routing (NOT generative)
-**Docs**: `docs/EMBEDDINGGEMMA.md`
-
-**Why**: Best quality under 500MB, multilingual (Hungarian, Vietnamese), <15ms per embedding on M2
-
-**Install**:
-```bash
-ollama pull embeddinggemma:300m
-```
-
-### ✅ Level 2 (Decided)
-
-**Primary Model**: `qwen2.5-coder:3b` (Qwen2.5-Coder-3B-Instruct)
-**Size**: 1.9GB
-**Role**: Constitutional code linting
-**Benchmarks**: 84.1% HumanEval, 73.6% MBPP, 72.1% MultiPL-E avg
-
-**Install**:
-```bash
-ollama pull qwen2.5-coder:3b
-```
-
-**Secondary Model**: `qwen3:4b` (Qwen3-4B-Instruct, optional)
-**Size**: 2.5GB
-**Role**: General instruction-following tasks
-**Benchmarks**: 83.4% IFEval, 76.8% MultiPL-E
-
-**Install** (optional):
-```bash
-ollama pull qwen3:4b
-```
-
-**Decision**: Code specialization (84.1% HumanEval) > General instruction-following for pattern-based linting.
-
-### ⚠️ Level 3 (Optional)
-
-**Model**: `qwen2.5-coder:7b` (Qwen2.5-Coder-7B-Instruct)
-**Size**: 4.7GB
-**Role**: Deep architectural analysis (optional, install only if Level 2 misses >10% violations)
-
-**Full comparison**: `docs/MODEL-DECISIONS.md`
-
----
-
-## CLI Commands (Pseudo Code Reference)
-
-**Note**: These interfaces are designed but NOT implemented.
-
-### Execution
-```bash
-tinyarms run file-naming ~/Downloads          # Run skill
-tinyarms run file-naming --dry-run            # Preview
-tinyarms run file-naming --json               # Machine-readable
-```
-
-### Monitoring
-```bash
-tinyarms status                               # System overview
-tinyarms history                              # Recent tasks
-tinyarms logs --tail 50 --follow              # Live logs
-```
-
-### Models
-```bash
-tinyarms models list                          # Installed models
-tinyarms models load <model>                  # Load into memory
-tinyarms models unload <model>                # Free memory
-```
-
-### MCP Server
-```bash
-tinyarms mcp-server                           # Start MCP integration
-tinyarms mcp-server --port 3000               # Custom port
-```
-
----
-
-## Configuration
-
-**Location**: `~/.config/tinyarms/config.yaml`
-
-**Example**:
-```yaml
-system:
-  ollama_host: http://localhost:11434
-
-models:
-  level1: embeddinggemma:300m   # 200MB
-  level2: gemma2:2b              # 1.5GB
-  level3: qwen2.5-coder:7b       # 4.7GB (idle-only)
-
-skills:
-  file-naming:
-    enabled: true
-    model: level2
-
-  code-linting:
-    enabled: true
-    model: level3
-    schedule:
-      type: idle_only
-      min_idle_minutes: 15
-      require_ac_power: true
-    constitution_path: ~/.specify/memory/constitution.md
-```
-
-**More examples**: `config/examples/` (balanced, aggressive configs)
-
----
-
-## Documentation
-
-### Architecture
-- `docs/EMBEDDINGGEMMA.md` - Level 1 decision rationale
-- `docs/MODEL-OPTIONS.md` - 20+ model comparison
-- `IMPLEMENTATION.md` - Complete technical details
-- `PROJECT_SUMMARY.md` - Built vs planned status
-
-### Integration
-- `docs/mcp-server-ideations.md` - MCP design
-- `docs/swiftui-app-ideations.md` - GUI mockups
-- `docs/launchagent-ideations.md` - Automation strategies
-
-### Quick Start
-- `QUICKSTART.md` - Setup guide (conceptual)
+**Full model research**: See [docs/01-MODELS.md](docs/01-MODELS.md)
 
 ---
 
@@ -273,12 +97,10 @@ skills:
 
 ## Platform Requirements
 
-- **OS**: macOS 12.0+ (Apple Silicon recommended)
-- **RAM**: 8GB minimum, 16GB recommended
-- **Storage**: 5GB+ for models
-- **Dependencies**:
-  - Ollama: `curl -fsSL https://ollama.com/install.sh | sh`
-  - Node.js 18+ (if using Transformers.js fallback)
+**Hardware**: macOS 12.0+, 8GB RAM min (16GB recommended), 5-14GB storage
+**Dependencies**: Ollama, Node.js 18+
+
+**Full details**: See [00-OVERVIEW.md - Hardware Requirements](docs/00-OVERVIEW.md#hardware-requirements)
 
 ---
 
@@ -288,5 +110,19 @@ skills:
 **Phase**: Architecture & research (0% implemented)
 **Tech stack**: Node.js + Ollama + SQLite + LaunchAgents (planned)
 **Unique trait**: Memory-optimized tiered routing (tiny models first)
+
+**CLI Examples**:
+```bash
+# Fast code linting (pre-commit)
+tinyarms run code-linting-fast src/ --json
+
+# Status overview
+tinyarms status
+
+# Model management
+tinyarms models list
+```
+
+**Full CLI reference**: See [01-ARCHITECTURE.md - Skills](docs/01-ARCHITECTURE.md#skills)
 
 **Before implementation**: Confirm executable code vs reference architecture with user.

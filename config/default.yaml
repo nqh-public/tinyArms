@@ -1,0 +1,111 @@
+# 🦖 TinyArms Configuration
+
+skills:
+  file-naming:
+    enabled: true
+    schedule: "0 */4 * * *"    # Every 4 hours
+    watch_paths:
+      - ~/Downloads
+      - ~/Desktop
+    model: gemma3:4b
+    batch_size: 20
+    description: "Intelligently rename screenshots and downloads"
+    
+  code-linting:
+    enabled: true
+    trigger: manual              # Only run when called by agents or humans
+    constitution_path: ~/.specify/memory/constitution.md
+    model: qwen2.5-coder:7b
+    max_file_size_kb: 500
+    description: "Constitutional code review against your principles"
+    
+  markdown-analysis:
+    enabled: true
+    schedule: "0 */2 * * *"    # Every 2 hours
+    watch_paths:
+      - ~/CODES/nqh/.specify/memory/
+    model: gemma3:4b
+    description: "Detect changes in markdown and suggest actions"
+    
+  voice-actions:
+    enabled: false              # Requires MacWhisper
+    trigger: manual
+    model: gemma3:4b
+    transcription_path: ~/Documents/Transcriptions/
+    description: "Process voice transcriptions into actions"
+
+system:
+  ollama_host: http://localhost:11434
+  log_level: info
+  require_ac_power: true         # Only run scheduled tasks when plugged in
+  max_memory_mb: 8000            # Stop if memory usage exceeds this
+  notification: true              # Show macOS notifications
+  
+  # Model settings
+  models:
+    gemma3:
+      path: gemma3-4b-pt:Q4_K_M
+      context_length: 128000
+      temperature: 0.7
+    qwen-coder:
+      path: qwen2.5-coder:7b-instruct-q4_K_M
+      context_length: 32000
+      temperature: 0.1          # Low for deterministic code review
+  
+  # Routing thresholds
+  routing:
+    level0_confidence: 1.0      # Deterministic rules
+    level1_confidence: 0.85     # Gemma 3 4B
+    level2_confidence: 0.60     # Qwen 7B
+    fallback: ask_user          # When all levels fail
+
+  # Performance
+  cache:
+    enabled: true
+    ttl_hours: 24
+    max_entries: 1000
+  
+  # Paths
+  paths:
+    logs: ~/.config/tinyarms/logs
+    database: ~/.config/tinyarms/tinyarms.db
+    skills: ~/.config/tinyarms/skills
+    cache: ~/.config/tinyarms/cache
+
+# Rule definitions (Level 0 - no AI needed)
+rules:
+  file_types:
+    design:
+      extensions: [.fig, .sketch, .psd, .ai, .xd]
+      keywords: [mockup, design, ui, ux, wireframe, prototype]
+      destination: ~/Documents/Design/
+    
+    screenshot:
+      extensions: [.png, .jpg]
+      keywords: [screenshot, screen, capture]
+      source_paths: [~/Desktop, ~/Downloads]
+      destination: ~/Documents/Screenshots/
+    
+    code:
+      extensions: [.ts, .tsx, .js, .jsx, .py, .rs, .go, .swift]
+      destination: ~/Documents/Dev/
+    
+    document:
+      extensions: [.pdf, .docx, .md, .txt]
+      destination: ~/Documents/
+  
+  # Filename cleaning rules
+  filename_patterns:
+    remove:
+      - "Screenshot "
+      - "Screen Shot "
+      - "Untitled"
+      - "[0-9]{4}-[0-9]{2}-[0-9]{2}" # Remove dates
+    
+    replace:
+      - pattern: "\\s+"
+        with: "-"
+      - pattern: "[^a-z0-9-]"
+        with: ""
+      - pattern: "-+"
+        with: "-"

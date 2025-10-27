@@ -1,0 +1,49 @@
+{
+  "name": "tinyarms",
+  "version": "0.1.0",
+  "description": "🦖 Tiny AI models with helping arms - local automation for humans and AI agents",
+  "main": "dist/index.js",
+  "bin": {
+    "tinyarms": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/cli.ts",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts",
+    "setup": "./scripts/setup.sh"
+  },
+  "keywords": [
+    "ai",
+    "automation",
+    "local-ai",
+    "ollama",
+    "mcp",
+    "claude-code",
+    "macos"
+  ],
+  "author": "huy",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "better-sqlite3": "^9.2.2",
+    "chokidar": "^3.5.3",
+    "commander": "^11.1.0",
+    "js-yaml": "^4.1.0",
+    "node-notifier": "^10.0.1",
+    "ollama": "^0.5.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.10.6",
+    "eslint": "^8.56.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

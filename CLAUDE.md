@@ -46,7 +46,11 @@ git push origin main
 git subtree push --prefix=apps/tinyArms tinyarms-public main
 ```
 
-**What gets synced**: Everything in `apps/tinyArms/` EXCEPT `CLAUDE.md` (removed in public repo)
+**What gets synced**: Everything in `apps/tinyArms/` including CLAUDE.md (monorepo history)
+
+**Note**: CLAUDE.md appears in public repo after each sync (monorepo history). Either:
+- Ignore it (users can skip monorepo-specific sections)
+- Manually remove after sync: Clone public repo, `git rm CLAUDE.md`, commit, push
 
 **Remote configured**: `tinyarms-public` → `https://github.com/nqh-public/tinyArms.git`
 

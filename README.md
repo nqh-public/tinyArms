@@ -55,10 +55,12 @@ ollama pull qwen2.5-coder:3b
 - **[docs/04-mcp-server-ideations.md](docs/04-mcp-server-ideations.md)** - MCP integration design
 - **[docs/04-swiftui-app-ideations.md](docs/04-swiftui-app-ideations.md)** - GUI mockups
 
+**Advanced Systems**:
+- **[docs/05-prompt-evolution-system.md](docs/05-prompt-evolution-system.md)** - Self-improving prompts via SmolLM2 A/B testing
+
 **Research** (Pre-Implementation):
 - **[docs/research/jan-nano-4b-use-cases.md](docs/research/jan-nano-4b-use-cases.md)** - 10 prioritized use cases for research agent
 - **[docs/research/magic-numbers-audit.md](docs/research/magic-numbers-audit.md)** - Audit trail for all numeric constants
-- **[docs/research/flan-t5-prompt-evolution.md](docs/research/flan-t5-prompt-evolution.md)** - Self-improving prompts via A/B testing
 
 **Configuration**:
 - **[config/constants.yaml](config/constants.yaml)** - Centralized constants with source documentation

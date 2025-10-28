@@ -1,8 +1,40 @@
-# flan-t5-small: Prompt Evolution System
+# SmolLM2-360M: Prompt Evolution System
 
 **Purpose**: Meta-learning system that continuously improves tinyArms prompts through user feedback
 **Status**: Research phase (0% implemented)
 **Date**: 2025-10-27
+
+---
+
+## Model Selection
+
+**Previous Choice**: flan-t5-small (60M params, 200MB)
+**Current Choice**: SmolLM2-360M-Instruct (360M params, 200-250MB Q4)
+
+### Comparison
+
+| Metric | flan-t5-small | SmolLM2-360M-Instruct | Winner |
+|--------|---------------|----------------------|--------|
+| Parameters | 60M | 360M | SmolLM2 (6x) |
+| Size (disk) | 200MB | 200-250MB (Q4_K_M) | Tie |
+| Context window | 512 tokens | 8,192 tokens | SmolLM2 (16x) |
+| Latency (8GB M1) | 2-3s | 5-8s | flan-t5 |
+| Instruction following | Good | Excellent | SmolLM2 |
+| Multi-turn coherence | Fair | Excellent | SmolLM2 |
+| License | Apache 2.0 | Apache 2.0 | Tie |
+
+### Why SmolLM2-360M?
+
+1. **Better reasoning**: 6x more parameters = stronger instruction following
+2. **Larger context**: 8K tokens fits full prompt history + examples (vs 512 token limit)
+3. **Still fits 8GB RAM**: Q4 quantization keeps size <250MB
+4. **Acceptable latency**: 5-8s is fine for nightly/bi-daily background jobs
+5. **Modern architecture**: Released 2024, optimized for small hardware
+
+### Trade-off
+
+**Latency increase**: 2-3s → 5-8s (2.5x slower)
+**Acceptable because**: Runs max once per week per skill, user never waits
 
 ---
 
@@ -39,9 +71,9 @@ Trigger: Generate new prompt variants
 
 ---
 
-### Step 1: flan-t5 Generates Variants
+### Step 1: SmolLM2 Generates Variants
 
-**Input to flan-t5**:
+**Input to SmolLM2**:
 ```
 Current prompt: "Rename this file based on its visual content. Be descriptive and use kebab-case."
 
@@ -53,7 +85,7 @@ Recent failures:
 Task: Generate 3 alternative prompts that improve accuracy.
 ```
 
-**flan-t5 output** (3 variants):
+**SmolLM2 output** (3 variants):
 ```yaml
 variant_a:
   prompt: "Analyze the image content and rename with descriptive keywords. Format: [main-subject]-[context]-[type].kebab-case. Examples: hero-section-mobile-mockup.png, user-profile-wireframe-v3.png"
@@ -159,7 +191,7 @@ skills:
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              flan-t5-small Prompt Generator                 │
+│           SmolLM2-360M-Instruct Prompt Generator           │
 │  (Runs ONCE when triggered, not per-task)                  │
 │                                                             │
 │  Input:                                                     │
@@ -171,7 +203,7 @@ skills:
 │  Output:                                                    │
 │    - 3 prompt variants with reasoning                       │
 │                                                             │
-│  Latency: ~2-3s (one-time cost)                            │
+│  Latency: ~5-8s (one-time cost)                            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -233,7 +265,7 @@ tinyarms prompt stats file-naming
 tinyarms prompt evolve file-naming --variants 5
 
 # Output:
-# Generating 5 prompt variants with flan-t5...
+# Generating 5 prompt variants with SmolLM2...
 # Variants saved. Next 50 tasks will A/B test.
 
 # View A/B test results
@@ -286,15 +318,17 @@ prompt_evolution:
     # Source: Balance learning vs annoyance
     # Status: PLACEHOLDER - tune based on user feedback
 
-  flan_t5:
-    model: "flan-t5:small"
-    variants_per_evolution: 3       # ARBITRARY - Too many = choice paralysis
+  smollm2:
+    model: "smollm2:360m-instruct-q4_k_m"  # Updated from flan-t5:small
+    quantization: "Q4_K_M"                # 200-250MB
+    context_window: 8192                  # 16x larger than flan-t5 (512 tokens)
+    variants_per_evolution: 3             # ARBITRARY - Too many = choice paralysis
     # Source: UX research (3-4 options = optimal choice)
     # Status: PLACEHOLDER
 
-    latency_budget_ms: 5000         # ESTIMATED - Acceptable for one-time cost
-    # Source: Evolution is async, user doesn't wait
-    # Status: NEEDS_VALIDATION
+    latency_budget_ms: 8000               # Updated from 5000ms (5-8s acceptable)
+    # Source: SmolLM2 benchmarks (HuggingFace), nightly job = latency not critical
+    # Status: NEEDS_VALIDATION (test on 8GB M1)
 
   learning:
     min_accuracy_improvement: 0.05  # ARBITRARY - 5% = meaningful
@@ -370,7 +404,7 @@ Be concise but specific.
 
 ---
 
-### flan-t5 Generates Variants (Week 8)
+### SmolLM2 Generates Variants (Week 8)
 
 **Variant A** (Structured Format):
 ```markdown
@@ -471,7 +505,7 @@ skills:
       - version: 2
         active_since: "2024-11-10"
         accuracy: 0.91
-        source: "flan-t5 evolution (variant C)"
+        source: "SmolLM2 evolution (variant C)"
 ```
 
 **New prompt file created**:
@@ -485,7 +519,7 @@ skills/file-naming-v2.md  # Variant C promoted
 
 ## Implementation Phases
 
-### Phase 1: Manual Prompt Evolution (No flan-t5)
+### Phase 1: Manual Prompt Evolution (No SmolLM2)
 
 ```bash
 # User manually creates variants
@@ -502,14 +536,14 @@ tinyarms prompt create file-naming \
 
 ---
 
-### Phase 2: flan-t5 Auto-Generation
+### Phase 2: SmolLM2 Auto-Generation
 
 ```bash
-# Accuracy drops, flan-t5 auto-generates variants
+# Accuracy drops, SmolLM2 auto-generates variants
 # (No user action needed)
 ```
 
-**Deliverable**: Integrate flan-t5:small, variant generation logic
+**Deliverable**: Integrate SmolLM2-360M-Instruct, variant generation logic
 
 ---
 
@@ -547,7 +581,7 @@ CREATE TABLE prompt_variants (
   session_id TEXT REFERENCES prompt_evolution_sessions(id),
   variant_letter TEXT,  -- A, B, C
   prompt_template TEXT NOT NULL,
-  reasoning TEXT,  -- Why flan-t5 generated this variant
+  reasoning TEXT,  -- Why SmolLM2 generated this variant
   votes INTEGER DEFAULT 0,
   accuracy REAL DEFAULT 0.0
 );
@@ -571,7 +605,7 @@ CREATE TABLE prompt_history (
   active_to TIMESTAMP,
   accuracy_start REAL,
   accuracy_end REAL,
-  evolution_source TEXT,  -- "flan-t5", "manual", "initial"
+  evolution_source TEXT,  -- "SmolLM2", "manual", "initial"
   notes TEXT
 );
 ```
@@ -581,7 +615,7 @@ CREATE TABLE prompt_history (
 ## Cost Analysis
 
 **Per evolution cycle**:
-- flan-t5 inference: ~2-3s (one-time)
+- SmolLM2 inference: ~5-8s (one-time)
 - A/B testing: 30 user choices (spread over 7 days)
 - Storage: ~5KB per evolution session
 
@@ -609,16 +643,16 @@ CREATE TABLE prompt_history (
 
 ---
 
-### Phase 2: flan-t5 Testing
+### Phase 2: SmolLM2 Testing
 
-1. Use flan-t5 to generate variants (same failure examples)
-2. Compare flan-t5 variants vs manual variants
+1. Use SmolLM2 to generate variants (same failure examples)
+2. Compare SmolLM2 variants vs manual variants
 3. Measure:
    - Variant quality (do they make sense?)
    - User choice distribution
    - Accuracy improvement
 
-**Success criteria**: flan-t5 variants perform ≥ manual variants
+**Success criteria**: SmolLM2 variants perform ≥ manual variants
 
 ---
 
@@ -648,7 +682,7 @@ CREATE TABLE prompt_history (
 
 ---
 
-### Risk 2: flan-t5 Generates Bad Variants
+### Risk 2: SmolLM2 Generates Bad Variants
 
 **Problem**: Variants are nonsensical or redundant
 
@@ -672,7 +706,9 @@ CREATE TABLE prompt_history (
 
 ## References
 
-- **flan-t5 model card**: https://huggingface.co/google/flan-t5-small
+- **SmolLM2 model card**: https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct
+- **SmolLM2 announcement**: https://huggingface.co/blog/smollm2
+- **Ollama SmolLM2 models**: https://ollama.com/library/smollm2
 - **A/B testing best practices**: Kohavi & Longbotham (2017), "Online Controlled Experiments"
 - **Prompt optimization**: OpenAI prompt engineering guide
 - **Meta-learning**: Nichol et al. (2018), "Reptile: A Scalable Meta-Learning Algorithm"
@@ -683,16 +719,16 @@ CREATE TABLE prompt_history (
 
 **Phase**: Research (0% implemented)
 **Next steps**:
-1. Validate flan-t5:small can generate coherent prompt variants
+1. Validate SmolLM2-360M-Instruct can generate coherent prompt variants
 2. Build A/B testing UI (terminal prompt or macOS notification)
 3. Implement SQLite schema for tracking
 4. Test with file-naming skill (high variation, easy to judge)
 
 **Timeline**:
 - Phase 1 (Manual): Week 1-2 (build A/B framework)
-- Phase 2 (flan-t5): Week 3-4 (integrate model)
+- Phase 2 (SmolLM2): Week 3-4 (integrate model)
 - Phase 3 (Production): Week 5+ (deploy to 1-2 skills)
 
 ---
 
-**Key insight**: flan-t5 is NOT a per-task overhead. It's a **self-improvement system** that runs in the background when skills need tuning.
+**Key insight**: SmolLM2 is NOT a per-task overhead. It's a **self-improvement system** that runs in the background when skills need tuning.

@@ -585,7 +585,7 @@ Week 10: Winning prompt auto-promoted, accuracy back to 91%
 - Skills self-improve over time
 - ROI: 5-15% accuracy improvement per evolution
 
-**See**: `docs/research/flan-t5-prompt-evolution.md` for complete design
+**See**: `docs/05-prompt-evolution-system.md` for complete design
 
 ---
 

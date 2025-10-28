@@ -388,6 +388,8 @@ Be concise but specific.
 
 **Accuracy**: 92% (Weeks 1-6)
 
+**Note**: For comprehensive task-specific prompt patterns with proven examples, see [research/vector-4-task-specific-patterns.md](research/vector-4-task-specific-patterns.md). This research covers effective/ineffective patterns for all 4 tinyArms skills with 51 cited sources.
+
 ---
 
 ### Accuracy Drop (Week 7)

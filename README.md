@@ -36,7 +36,8 @@ ollama pull qwen2.5-coder:3b
 - **[docs/00-GETTING-STARTED.md](docs/00-GETTING-STARTED.md)** - Prerequisites, first run
 
 **Core Concepts**:
-- **[docs/01-ARCHITECTURE.md](docs/01-ARCHITECTURE.md)** - Tiered routing, skills, MCP
+- **[docs/01-ARCHITECTURE.md](docs/01-ARCHITECTURE.md)** - Tiered routing, skills, MCP (original)
+- **[docs/01-ARCHITECTURE-V2.md](docs/01-ARCHITECTURE-V2.md)** - Refined architecture with jan-nano-4b integration
 - **[docs/01-MODELS.md](docs/01-MODELS.md)** - Model decisions + benchmarks
 
 **Setup**:
@@ -49,9 +50,17 @@ ollama pull qwen2.5-coder:3b
 - **[docs/03-INTEGRATIONS.md](docs/03-INTEGRATIONS.md)** - MacWhisper, Claude Code, jan-nano-4b
 
 **Design** (Ideations):
+- **[docs/04-direct-model-access.md](docs/04-direct-model-access.md)** - CLI/MCP for direct model access
 - **[docs/04-launchagent-ideations.md](docs/04-launchagent-ideations.md)** - Automation strategies
 - **[docs/04-mcp-server-ideations.md](docs/04-mcp-server-ideations.md)** - MCP integration design
 - **[docs/04-swiftui-app-ideations.md](docs/04-swiftui-app-ideations.md)** - GUI mockups
+
+**Research** (Pre-Implementation):
+- **[docs/research/jan-nano-4b-use-cases.md](docs/research/jan-nano-4b-use-cases.md)** - 10 prioritized use cases for research agent
+- **[docs/research/magic-numbers-audit.md](docs/research/magic-numbers-audit.md)** - Audit trail for all numeric constants
+
+**Configuration**:
+- **[config/constants.yaml](config/constants.yaml)** - Centralized constants with source documentation
 
 **Status**: **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - What's built, what's planned
 

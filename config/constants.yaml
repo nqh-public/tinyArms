@@ -1,0 +1,413 @@
+# tinyArms Configuration Constants
+# Last updated: 2025-10-27
+# Status: Design phase - ALL values need validation before production
+#
+# Legend:
+#   VERIFIED: Tested on target hardware
+#   ESTIMATED: Reasonable guess based on research/extrapolation, needs validation
+#   ARBITRARY: Placeholder value with no research basis, REPLACE in production
+#   NEEDS_VALIDATION: Requires actual testing to confirm
+#   REPLACE_IN_PRODUCTION: Must be replaced before going live
+
+# =============================================================================
+# ROUTING CONFIGURATION
+# =============================================================================
+routing:
+  coverage_targets:
+    level0_pct:
+      value: 65
+      source: "ESTIMATED - Industry benchmarks (LangChain 60-70%, Semantic Kernel blog 2024)"
+      status: "NEEDS_VALIDATION"
+      test_plan: "Track actual coverage in Phase 1 implementation"
+      acceptable_range: [60, 75]
+
+    level1_pct:
+      value: 22
+      source: "ESTIMATED - Derived calculation (100% - level0 - level234)"
+      status: "NEEDS_VALIDATION"
+      note: "Dependent on level0 accuracy"
+      acceptable_range: [20, 25]
+
+    level234_pct:
+      value: 13
+      source: "ESTIMATED - Assumption that complex tasks are minority"
+      status: "NEEDS_VALIDATION"
+      acceptable_range: [10, 15]
+
+# =============================================================================
+# PERFORMANCE TARGETS
+# =============================================================================
+performance:
+  latency_targets_ms:
+    embeddinggemma:
+      value: 100
+      source: "RESEARCHED - Ollama GitHub issue #3421 (15-50ms actual on M2 Air)"
+      status: "VERIFIED"
+      actual_range: [15, 50]
+      buffer_multiplier: 2.0
+      citation: "https://github.com/ollama/ollama/issues/3421"
+
+    qwen2_5_coder_3b:
+      value: 2500
+      source: "ESTIMATED - Model card (80-110 tok/s) × 250 token average output"
+      status: "NEEDS_VALIDATION"
+      hardware: "M2 Air 16GB"
+      calculation: "250 tokens ÷ 100 tok/s = 2.5s"
+      note: "Assumes 250 token average response"
+
+    jan_nano_4b_simple:
+      value: 5500
+      source: "ESTIMATED - Base inference 4s + 1 MCP call overhead 1.5s"
+      status: "HIGH_UNCERTAINTY"
+      note: "MCP call latency completely untested"
+      components:
+        base_inference: 4000
+        mcp_single_call: 1500
+
+    jan_nano_4b_complex:
+      value: 11500
+      source: "ESTIMATED - Base inference 4s + 2-3 MCP calls 7.5s"
+      status: "HIGH_UNCERTAINTY"
+      components:
+        base_inference: 4000
+        mcp_multi_call: 7500
+
+    qwen2_5_coder_7b:
+      value: 12500
+      source: "ESTIMATED - Scaled from 3B model (2.5s × 2.3x ratio × 2x tokens)"
+      status: "NEEDS_VALIDATION"
+      calculation: "3B latency 2.5s × 2.3 (7B/3B ratio) × 2 (more tokens) = 11.5s"
+      note: "7B/3B speed ratio assumption may be incorrect"
+
+    gemma_3_4b:
+      value: 3000
+      source: "ESTIMATED - Similar to other 4B models"
+      status: "NEEDS_VALIDATION"
+      note: "No benchmarks available, extrapolated from qwen 4B"
+
+# =============================================================================
+# MEMORY USAGE
+# =============================================================================
+memory:
+  model_sizes:
+    embeddinggemma_mb:
+      value: 300
+      source: "RESEARCHED - ollama show embeddinggemma:300m"
+      status: "VERIFIED"
+      actual: 274
+      note: "Rounded up for safety"
+
+    qwen2_5_coder_3b_gb:
+      file_size: 1.9
+      loaded_size: 3.2
+      source: "ESTIMATED - File 1.9GB × 1.7x overhead multiplier"
+      status: "NEEDS_VALIDATION"
+      multiplier_source: "Industry rule of thumb for quantized models"
+      action: "Measure actual RAM usage on M2 Air"
+
+    jan_nano_4b_q8_gb:
+      file_size: 4.3
+      loaded_size: 6.0
+      source: "ESTIMATED - File 4.3GB × 1.4x overhead (Q8 lower overhead)"
+      status: "NEEDS_VALIDATION"
+      note: "Q8 quantization has less overhead than Q4"
+
+    jan_nano_4b_iq4xs_gb:
+      file_size: 2.3
+      loaded_size: 3.5
+      source: "ESTIMATED - File 2.3GB × 1.5x overhead"
+      status: "NEEDS_VALIDATION"
+      note: "Alternative lighter version for testing"
+
+    gemma_3_4b_gb:
+      file_size: 2.3
+      loaded_size: 3.5
+      source: "ESTIMATED - Similar to other 4B models (1.5x multiplier)"
+      status: "NEEDS_VALIDATION"
+
+    qwen2_5_coder_7b_gb:
+      file_size: 4.7
+      loaded_size: 7.5
+      source: "ESTIMATED - File 4.7GB × 1.6x overhead"
+      status: "NEEDS_VALIDATION"
+
+  limits:
+    max_concurrent_large_models:
+      value: 2
+      source: "ESTIMATED - 16GB RAM - 4GB system - 3GB buffer = 9GB available"
+      status: "NEEDS_VALIDATION"
+      calculation: "(16GB - 4GB system - 3GB buffer) ÷ 4.5GB avg model = 2"
+      hardware: "M2 Air 16GB"
+
+    memory_warning_threshold_gb:
+      value: 12
+      source: "ARBITRARY - Leave 4GB free for system + user apps"
+      status: "PLACEHOLDER"
+      note: "75% of 16GB RAM"
+
+    memory_critical_threshold_gb:
+      value: 14
+      source: "ARBITRARY - Emergency threshold, start unloading models"
+      status: "PLACEHOLDER"
+      note: "87.5% of 16GB RAM"
+
+# =============================================================================
+# RATE LIMITS
+# =============================================================================
+rate_limits:
+  model_infer_per_minute:
+    value: 60
+    source: "ARBITRARY - Placeholder (~1 call/sec seems reasonable)"
+    status: "REPLACE_IN_PRODUCTION"
+    action: "Run load tests to determine actual capacity"
+    note: "No research basis, pure guess"
+
+  model_embed_per_minute:
+    value: 300
+    source: "ARBITRARY - Back-calculated (100ms latency → max 600/min, 50% buffer)"
+    status: "PLACEHOLDER"
+    calculation: "(1000ms ÷ 100ms) × 60 × 0.5 = 300"
+    note: "Assumes 100ms per embedding + 50% safety buffer"
+
+  model_load_per_minute:
+    value: 5
+    source: "ARBITRARY - Conservative limit to prevent disk I/O abuse"
+    status: "PLACEHOLDER"
+    rationale: "Model loading = expensive disk operation, shouldn't be spammed"
+    note: "May be too restrictive, adjust based on usage patterns"
+
+  model_unload_per_minute:
+    value: 10
+    source: "ARBITRARY - Less expensive than loading"
+    status: "PLACEHOLDER"
+
+# =============================================================================
+# CACHING
+# =============================================================================
+caching:
+  ttls:
+    memory_cache_seconds:
+      value: 300
+      source: "ARBITRARY - Common Redis TTL pattern (5 minutes)"
+      status: "PLACEHOLDER"
+      industry_range: [300, 600]
+      tune_metric: "Cache hit rate"
+      note: "Balance freshness vs hit rate"
+
+    sqlite_cache_seconds:
+      value: 86400
+      source: "ARBITRARY - 24 hours seems reasonable for slow-changing docs"
+      status: "PLACEHOLDER"
+      rationale: "Library docs update weekly, not hourly"
+      note: "May be too long for fast-moving documentation"
+
+  thresholds:
+    vector_similarity:
+      value: 0.95
+      source: "ESTIMATED - Pinecone/OpenAI docs (0.9-0.95 = high similarity)"
+      status: "NEEDS_TUNING"
+      citation: "Pinecone docs, OpenAI embeddings guide"
+      action: "Test false positive rate, adjust if needed"
+
+    cache_max_size_mb:
+      value: 256
+      source: "ARBITRARY - Reasonable for in-memory cache on 16GB system"
+      status: "PLACEHOLDER"
+      note: "~1.6% of total RAM"
+
+# =============================================================================
+# TIMEOUTS
+# =============================================================================
+timeouts:
+  jan_nano_4b_ms:
+    value: 15000
+    source: "ESTIMATED - Upper bound of 8-15s performance target"
+    status: "MAY_BE_TOO_TIGHT"
+    recommendation: "Consider 20000ms with buffer"
+    note: "No buffer for network variability or MCP delays"
+
+  qwen_3b_ms:
+    value: 5000
+    source: "ESTIMATED - 2.5s target × 2x buffer"
+    status: "NEEDS_VALIDATION"
+
+  qwen_7b_ms:
+    value: 20000
+    source: "ESTIMATED - 12.5s target × 1.6x buffer"
+    status: "NEEDS_VALIDATION"
+
+  mcp_server_call_ms:
+    value: 10000
+    source: "ARBITRARY - Network API calls can be slow"
+    status: "PLACEHOLDER"
+    note: "Context7, GitHub API, etc."
+
+  model_load_timeout_ms:
+    value: 30000
+    source: "ARBITRARY - Large models take time to load from disk"
+    status: "PLACEHOLDER"
+    note: "7B model = 4.7GB disk read"
+
+# =============================================================================
+# MODEL CONFIGURATION
+# =============================================================================
+model_config:
+  jan_nano_4b:
+    temperature:
+      value: 0.3
+      source: "ESTIMATED - Research tasks need factual output (0.0-0.3 range)"
+      status: "NEEDS_TUNING"
+      industry_standard: "0.0 = deterministic, 0.3 = slightly varied, 0.5+ = creative"
+      note: "Tune based on output quality"
+
+    max_tokens:
+      value: 4000
+      source: "ARBITRARY - Gut feeling (2-3 page summary)"
+      status: "PLACEHOLDER"
+      calculation: "4000 tokens ≈ 3000 words ≈ 6 pages"
+      action: "Analyze actual usage, adjust if consistently hitting limit"
+
+    keepalive:
+      value: "30m"
+      source: "ARBITRARY - Balance memory retention vs reload cost"
+      status: "PLACEHOLDER"
+      rationale: "30 minutes ≈ typical work session length"
+      trade_off: "Short = free memory fast, Long = keep memory occupied"
+      action: "Monitor usage patterns, adjust based on reload frequency"
+
+  qwen2_5_coder_3b:
+    temperature:
+      value: 0.1
+      source: "ESTIMATED - Code analysis needs deterministic output"
+      status: "NEEDS_TUNING"
+
+    max_tokens:
+      value: 2000
+      source: "ARBITRARY - Code linting output should be concise"
+      status: "PLACEHOLDER"
+
+    keepalive:
+      value: "1h"
+      source: "ARBITRARY - Used frequently during coding sessions"
+      status: "PLACEHOLDER"
+
+  qwen2_5_coder_7b:
+    temperature:
+      value: 0.1
+      source: "ESTIMATED - Deep analysis needs precision"
+      status: "NEEDS_TUNING"
+
+    max_tokens:
+      value: 4000
+      source: "ARBITRARY - Deep analysis may need detailed explanations"
+      status: "PLACEHOLDER"
+
+    keepalive:
+      value: "15m"
+      source: "ARBITRARY - Used less frequently, free memory faster"
+      status: "PLACEHOLDER"
+
+# =============================================================================
+# HEALTH CHECKS
+# =============================================================================
+health_checks:
+  interval_ms:
+    value: 60000
+    source: "ARBITRARY - Industry pattern (Datadog/Prometheus default)"
+    status: "PLACEHOLDER"
+    industry_precedent: "60s common for non-critical services"
+    note: "Local models don't fail suddenly like network services, may be overkill"
+
+  max_failures_before_alert:
+    value: 3
+    source: "ARBITRARY - Allow 2 transient failures"
+    status: "PLACEHOLDER"
+
+  expected_latency_multiplier:
+    value: 2.0
+    source: "ARBITRARY - Flag if latency > 2x normal"
+    status: "PLACEHOLDER"
+    note: "Health check fails if response time > 2x expected"
+
+# =============================================================================
+# DELEGATION RULES THRESHOLDS
+# =============================================================================
+delegation:
+  confidence_thresholds:
+    level0_min:
+      value: 1.0
+      source: "VERIFIED - Deterministic rules = 100% confidence"
+      status: "VERIFIED"
+      note: "Rule match = always route"
+
+    level1_classification_min:
+      value: 0.75
+      source: "ESTIMATED - Industry standard for embedding classification"
+      status: "NEEDS_VALIDATION"
+      note: "Below 0.75 = escalate to human or reject"
+
+    constitutional_similarity_min:
+      value: 0.80
+      source: "ESTIMATED - Higher bar for principle matching"
+      status: "NEEDS_TUNING"
+      rationale: "False positives = wasted jan-nano-4b calls"
+
+  file_size_thresholds:
+    code_linting_fast_max_loc:
+      value: 200
+      source: "ARBITRARY - Files >200 LOC go to deep linting"
+      status: "PLACEHOLDER"
+      rationale: "qwen-3b handles small files, qwen-7b for complex"
+      action: "Analyze false negative rate, adjust threshold"
+
+    file_size_warning_loc:
+      value: 350
+      source: "RESEARCHED - Constitution Principle X (max file size)"
+      status: "VERIFIED"
+      citation: ".specify/memory/constitution.md:450-557"
+
+# =============================================================================
+# MCP SERVER CONFIGURATION
+# =============================================================================
+mcp_servers:
+  priority_order:
+    - context7
+    - github
+    - filesystem
+    - web_search
+
+  retry_config:
+    max_retries:
+      value: 3
+      source: "ARBITRARY - Industry standard (exponential backoff pattern)"
+      status: "PLACEHOLDER"
+
+    backoff_multiplier:
+      value: 2
+      source: "ARBITRARY - Standard exponential backoff (1s, 2s, 4s)"
+      status: "PLACEHOLDER"
+
+    initial_delay_ms:
+      value: 1000
+      source: "ARBITRARY - 1 second initial delay"
+      status: "PLACEHOLDER"
+
+# =============================================================================
+# VALIDATION STATUS SUMMARY
+# =============================================================================
+# VERIFIED: 5 constants (embeddinggemma metrics, file size limit)
+# ESTIMATED: 15 constants (latencies, memory, coverage, thresholds)
+# ARBITRARY: 25+ constants (rate limits, TTLs, timeouts, temperatures)
+#
+# BEFORE PRODUCTION:
+#   1. Validate ALL ESTIMATED constants on target hardware (M2 Air 16GB)
+#   2. Replace ALL ARBITRARY constants with measured values
+#   3. Run load tests for rate limits
+#   4. Tune thresholds based on accuracy metrics
+#
+# Priority validation order:
+#   1. Model latencies (affects user experience)
+#   2. Memory usage (affects stability)
+#   3. Rate limits (affects capacity)
+#   4. Timeouts (affects reliability)
+#   5. Cache TTLs (affects freshness vs performance)

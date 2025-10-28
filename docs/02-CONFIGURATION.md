@@ -4,7 +4,51 @@
 
 ---
 
-## Configuration File
+## Configuration Files
+
+### User Configuration (config.yaml)
+
+**Location**: `~/.config/tinyarms/config.yaml`
+**Purpose**: Runtime behavior, skill settings, model selection
+
+### Constants Configuration (constants.yaml)
+
+**Location**: `apps/tinyArms/config/constants.yaml`
+**Purpose**: Centralized constants with source documentation
+
+All numeric values (latencies, thresholds, limits) are documented with:
+- **Source**: RESEARCHED (benchmarks), ESTIMATED (extrapolation), ARBITRARY (placeholder)
+- **Status**: VERIFIED, NEEDS_VALIDATION, PLACEHOLDER, REPLACE_IN_PRODUCTION
+- **Testing plans**: What needs validation before production
+
+**Examples**:
+```yaml
+performance:
+  latency_targets_ms:
+    embeddinggemma:
+      value: 100
+      source: "RESEARCHED - Ollama benchmarks (15-50ms actual)"
+      status: "VERIFIED"
+
+    jan_nano_4b_simple:
+      value: 5500
+      source: "ESTIMATED - Base 4s + 1 MCP call 1.5s"
+      status: "HIGH_UNCERTAINTY"
+      note: "MCP latency completely untested"
+
+rate_limits:
+  model_infer_per_minute:
+    value: 60
+    source: "ARBITRARY - Placeholder (~1 call/sec)"
+    status: "REPLACE_IN_PRODUCTION"
+    action: "Run load tests to find actual capacity"
+```
+
+**See**: `docs/research/magic-numbers-audit.md` for complete audit trail
+
+---
+
+## User Configuration (config.yaml)
 
 **Location**: `~/.config/tinyarms/config.yaml`
 

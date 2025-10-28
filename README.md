@@ -10,9 +10,9 @@ Super lightweight. Designed to be invisible. Learns from your preferences. Grows
 
 This is a **research project**. Architecture is complete, implementation has not started. Everything documented here is design, pseudo code, and research findings—not working software.
 
-**Why share now?** The architecture is proven through 6 research vectors (PromptBreeder, Thompson Sampling, ADWIN drift detection, etc.). Perfect time for AI researchers and tinkerers to explore the ideas, contribute, or fork the design.
+**Why share now?** The architecture is proven through 6 research vectors (PromptBreeder, Thompson Sampling, ADWIN drift detection, etc.). Plus I promised myself I would upload something that I work on finally 🥹
 
-**Timeline**: Architecture complete (2025-10-27). Implementation planned Q1 2025.
+**Timeline**: Architecture complete (2025-10-27). Implementation imminent.
 
 ⭐ **Star this repo** to follow development.
 
@@ -41,11 +41,11 @@ Next screenshot → Better suggestions. Every choice trains the system.
 
 ---
 
-## What Makes tinyArms Different
+## What Makes 🦖 tinyArms Different
 
 ### 1. Self-Improving via Prompt Evolution
 
-Most AI tools use static prompts. tinyArms uses **adaptive prompts** that improve through user feedback:
+Most AI tools use static prompts. tinyArms will **adaptive prompts** that improve through user feedback:
 
 - **Accuracy drops?** System generates 3 new prompt variants (offline, using SmolLM2-360M or jan-nano-4b)
 - **You vote** on which output is best (A/B testing via Thompson Sampling)
@@ -55,13 +55,13 @@ Most AI tools use static prompts. tinyArms uses **adaptive prompts** that improv
 **3-tier generation** with intelligent fallback:
 - **Tier 1**: SmolLM2-360M (250MB, offline, 60-70% success)
 - **Tier 2**: jan-nano-4b (4.3GB, offline, 25-30% cases)
-- **Tier 3**: Claude 3.5 Sonnet (cloud fallback, 5-10% cases, ~$0.01/evolution)
+- **Tier 3**: GPT 5 mini (cloud fallback, 5-10% cases, ~$0.004/evolution)
 
-**Cost**: 99% offline, <$0.10/year total.
+**Cost**: 99% offline, <$0.06/year total.
 
 ### 2. Tiered Routing (Fast Rules + Smart AI)
 
-Not everything needs AI. tinyArms routes tasks intelligently:
+Not everything needs AI. 🦖 tinyArms routes tasks intelligently:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

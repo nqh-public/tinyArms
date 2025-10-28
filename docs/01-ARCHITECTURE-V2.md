@@ -557,7 +557,39 @@ describe('End-to-End Routing', () => {
 
 ## Future Enhancements
 
-### 1. Learning from Feedback
+### 1. Prompt Evolution System (flan-t5-small)
+
+**Purpose**: Meta-learning system that auto-improves skill prompts when accuracy drops
+
+**NOT per-task optimization** (that adds latency)
+**IS background self-improvement** (runs when accuracy < 80%)
+
+**How it works**:
+1. Monitor skill accuracy (check every 24 hours)
+2. If accuracy drops below 80%: Trigger flan-t5 to generate 3 prompt variants
+3. A/B test variants with users (next 30 tasks for that skill)
+4. Auto-promote winning variant
+5. Accuracy improves without manual prompt engineering
+
+**Example**:
+```
+Week 1-6: file-naming accuracy = 92%
+Week 7: Accuracy drops to 78%
+Week 8: flan-t5 generates 3 better prompts
+Week 8-9: Users pick best variant (30 votes)
+Week 10: Winning prompt auto-promoted, accuracy back to 91%
+```
+
+**Benefits**:
+- User never edits YAML manually
+- Skills self-improve over time
+- ROI: 5-15% accuracy improvement per evolution
+
+**See**: `docs/research/flan-t5-prompt-evolution.md` for complete design
+
+---
+
+### 2. Learning from Feedback (Delegation Rules)
 
 ```yaml
 # User feedback → update delegation rules

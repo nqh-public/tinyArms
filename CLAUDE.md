@@ -26,6 +26,39 @@ tinyArms-specific overrides only. For constitutional principles, behavioral patt
 
 ---
 
+## Public Repository Sync
+
+**Public Repo**: https://github.com/nqh-public/tinyArms
+**Sync Method**: Git subtree (automated push from monorepo)
+
+### Workflow
+
+```bash
+# 1. Commit changes to monorepo (from /Users/huy/CODES/nqh)
+git add apps/tinyArms/
+git commit -m "feat(tinyArms): your change description
+
+apps/tinyArms/README.md:1
+"
+git push origin main
+
+# 2. Sync to public repo (when ready to publish)
+git subtree push --prefix=apps/tinyArms tinyarms-public main
+```
+
+**What gets synced**: Everything in `apps/tinyArms/` EXCEPT `CLAUDE.md` (removed in public repo)
+
+**Remote configured**: `tinyarms-public` → `https://github.com/nqh-public/tinyArms.git`
+
+**Optional alias** (add to ~/.zshrc):
+```bash
+alias tinyarms-sync="cd /Users/huy/CODES/nqh && git subtree push --prefix=apps/tinyArms tinyarms-public main"
+```
+
+**Batch commits**: You can commit multiple times to monorepo before syncing - subtree includes all commits since last push.
+
+---
+
 ## Project Overview
 
 **tinyArms** - Local AI assistant using tiny models (<500MB) for 24/7 filesystem watching and constitutional enforcement.

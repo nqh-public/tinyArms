@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="tinyarms-logo.jpg" alt="tinyArms" width="300" />
+</p>
+
 # 🦖 tinyArms
 
 **AI assistants that run on your laptop, cost nothing, and get smarter over time.**

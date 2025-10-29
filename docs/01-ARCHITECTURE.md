@@ -1,6 +1,8 @@
 # 01 - Architecture
 
-**Complete technical architecture for tinyArms**
+**High-level overview of tinyArms architecture**
+
+For detailed implementation, model decisions, configuration, and integrations, see the specialized docs linked below.
 
 ---
 
@@ -59,167 +61,117 @@ Human & AI Agent Interfaces
 
 60-75% of tasks should be handled by Level 0 (rules, no models). Only escalate to AI when truly necessary!
 
-### Level 0: Deterministic Rules (<1ms)
+---
 
+### Level -1: Semantic Cache
+
+**Purpose**: Return cached answers for similar queries (<50ms)
+**Status**: Researched (Phase 03)
+**Expected Impact**: 15-25% query elimination
+
+**How it works**:
+- Embed incoming query (reuse embeddinggemma from Level 1)
+- Search vector DB for similar cached queries
+- Similarity >0.95 → Return cached response (~60ms)
+- Similarity ≤0.95 → Continue to Level 0
+
+**Performance**:
+- Cache hit: ~60ms (40x faster than Level 2)
+- Cache miss overhead: +50ms (minimal impact on 2-3s total)
+- Memory: 500-800MB for 100K cached entries
+
+**Full details**: See [research/03-semantic-caching-design.md](research/03-semantic-caching-design.md)
+
+---
+
+### Level 0: Deterministic Rules
+
+**Purpose**: Instant responses for pattern-matching tasks (<1ms)
+**Target**: Handle 60-75% of tasks here
 **Status**: ⚠️ Coverage % assumed (needs validation)
-
-**Purpose**: Instant responses for pattern-matching tasks
 
 **Examples**:
 - Filename formatting (kebab-case)
 - Keyword extraction (RAKE algorithm)
 - File type detection (extension + path)
 - Directory mapping (lookup tables)
-- Voice transcript cleaning
 
 **Characteristics**:
 - Speed: <1ms
 - Accuracy: 100% (when rules match)
 - Size: 0 bytes
-- **Target: Handle 15-30% of tasks here** (up to 50-70% in narrow/repetitive domains)
-- **Research range**: 10-40% in production systems (Semantic Router, Intercom, RouteLLM)
-- **Note**: Combined Level 0+1 coverage: 45-65% for general-purpose assistants
+- Research range: 10-40% in production systems (Semantic Router, Intercom)
 
-**Implementation**:
-```typescript
-// Pseudo code
-function level0Router(task: Task): Result | null {
-  // Try deterministic rules first
-  if (task.type === 'file_naming' && hasSimplePattern(task.filename)) {
-    return formatFilename(task.filename); // <1ms
-  }
+**Full details**: See [03-INTEGRATIONS.md - Rules Engine section]
 
-  // If no rule matches, escalate to Level 1
-  return null;
-}
-```
+---
 
-### Level 1: Tiny Embeddings (<100ms)
-
-**Status**: ✅ Model validated | ⚠️ Thresholds assumed
+### Level 1: Tiny Embeddings
 
 **Purpose**: Semantic understanding layer for routing (NOT generative)
-
-**Model**: embeddinggemma:300m (200MB) ✅ VALIDATED (best multilingual <500M params)
+**Model**: embeddinggemma:300m (200MB)
 **Speed**: <15ms per embedding on M2
-**Output**: 768-dimensional vectors
+**Target**: Handle 20-25% of tasks here
 
 **Use Cases**:
-1. **File type classification**
-   - Input: "Screenshot of mobile app"
-   - Output: `{type: "screenshot", confidence: 0.92}`
-   - If confidence >= 0.80 → Use Level 0 rules ⚠️ THRESHOLD ASSUMED
-   - If confidence < 0.80 → Escalate to Level 2
-
-2. **Intent extraction from voice**
-   - Input: "um, like, rename this to hero mockup"
-   - Output: `{intent: "rename_file", confidence: 0.88}`
-   - If confidence >= 0.80 → Execute rename action ⚠️ THRESHOLD ASSUMED
-   - If confidence < 0.80 → Ask user for clarification
-
-3. **Constitutional principle similarity search**
-   - Input: Code snippet with potential violation
-   - Output: Top 3 matching constitutional principles
-   - Pass to Level 3 as context
-
-**Why Level 1?**
-- Catches 20-25% of tasks that rules can't handle but don't need full LLM
-- Saves 2-4 seconds per task vs jumping straight to Level 2
-- Provides semantic understanding WITHOUT generating text
+- File type classification
+- Intent extraction from voice
+- Constitutional principle similarity search
 
 **Characteristics**:
 - Speed: <100ms
-- Accuracy: 85-90% (classification) ⚠️ ASSUMED (needs tinyArms workload testing)
-- Size: 200MB
-- **Target: Handle 20-25% of tasks here** ⚠️ ASSUMED
+- Accuracy: 85-90% (classification) ⚠️ ASSUMED
+- Output: 768-dimensional vectors
 
-**Full details**: See [EMBEDDINGGEMMA.md - Level 1 section]
+**Full details**: See [01-MODELS.md - Level 1 section](01-MODELS.md#level-1-embeddinggemma300m--decided)
 
-### Level 2: Small Generalists (2-4s)
+---
+
+### Level 2: Small Generalists
 
 **Purpose**: Complex reasoning and generation
+**Primary**: Qwen2.5-Coder-3B-Instruct (1.9GB, code linting)
+**Speed**: 2-3s per file ⚠️ NEEDS M2 AIR TESTING
+**Target**: Handle 10-15% of tasks here
 
-**Multi-Model Architecture**:
+**What it detects**:
+- Hardcoded colors, magic numbers
+- File size violations (>350 LOC)
+- Import alias violations
+- Missing line references
+- Simple DRY violations
 
-#### Primary: Qwen2.5-Coder-3B-Instruct (Code Linting)
+**Accuracy**: 85% (15% miss rate on complex violations) ⚠️ ASSUMED
 
-**Status**: ✅ Model validated | ⚠️ Constitutional accuracy needs testing
+**Optional specialists**:
+- Qwen3-4B-Instruct (2.5GB) - General instruction-following tasks
+- Gemma 3 4B (2.3GB) - File naming, markdown, audio (reused from Cotypist)
 
-- **Size**: 1.9GB
-- **Role**: Constitutional code linting, pattern detection
-- **Benchmarks**: 84.1% HumanEval, 73.6% MBPP, 72.1% MultiPL-E avg ✅ VALIDATED
-- **Speed**: 80-110 tokens/sec on M2 Air (~2-3s per file) ⚠️ NEEDS M2 AIR TESTING
-- **Detects**: Hardcoded colors, magic numbers, file size violations, simple DRY, import aliases
-- **Accuracy**: 85% (15% miss rate on complex violations) ⚠️ ASSUMED (needs constitutional linting testing)
+**Full details**: See [01-MODELS.md - Level 2 section](01-MODELS.md#level-2-primary-qwen25-coder-3b-instruct--decided)
 
-**Why Qwen2.5-Coder-3B?**
-- ✅ 84.1% HumanEval (beats Qwen3-4B-Instruct's 62% base)
-- ✅ Code-specialized (5.5T code tokens across 92 languages)
-- ✅ 600MB smaller + 20-30% faster than 4B models
-- ✅ Priority 2 compatible (2-3s for pre-commit hooks)
+---
 
-#### Secondary: Qwen3-4B-Instruct (General Tasks, Optional)
-- **Size**: 2.5GB
-- **Role**: Non-code instruction-following tasks
-- **Benchmarks**: 83.4% IFEval, 76.8% MultiPL-E
-- **Use when**: Need superior instruction-following, NOT code analysis
-
-#### Optional Specialists
-- **Gemma 3 4B** (2.3GB) - File naming, markdown analysis, audio actions
-  - Can reuse from Cotypist (no duplicate download)
-- **Custom specialists** - Add per-skill via config
-
-**Characteristics**:
-- Speed: 2-4s ⚠️ NEEDS M2 AIR TESTING
-- Accuracy: 85-90% ⚠️ ASSUMED
-- Size: 1.9-2.5GB each
-- **Target: Handle 10-15% of tasks here** ⚠️ ASSUMED
-
-**Full details**: See [01-MODELS.md - Level 2 section]
-
-### Level 3: Code Specialists (10-15s, Optional)
-
-**Status**: ✅ Model validated | ⚠️ Accuracy needs testing
+### Level 3: Code Specialists
 
 **Purpose**: Deep architectural analysis (optional)
-
-**Model**: Qwen2.5-Coder 7B (4.7GB) ✅ VALIDATED
-**Speed**: 30-50 tokens/sec on M2 Air (~10-15s per file) ⚠️ NEEDS M2 AIR TESTING
-**Benchmarks**: 88.4% HumanEval (SOTA for 7B) ✅ VALIDATED
+**Model**: Qwen2.5-Coder 7B (4.7GB)
+**Speed**: 10-15s per file ⚠️ NEEDS M2 AIR TESTING
+**Target**: Handle <5% of tasks here
 
 **What it catches (vs Level 2)**:
 - Architectural anti-patterns (God objects, circular deps)
-- Complex DRY violations (semantic duplication, different syntax)
+- Complex DRY violations (semantic duplication)
 - Cross-file pattern analysis
 - Component decomposition issues
-- Implicit design pattern violations
 
-**Accuracy**: 95% (vs 85% for Level 2) ⚠️ ASSUMED (needs constitutional linting testing)
+**Accuracy**: 95% (vs 85% for Level 2) ⚠️ ASSUMED
 
 **When to install**:
 - Level 2 misses >10% violations
-- Need architectural enforcement (Constitution Principle III, XIII)
+- Need architectural enforcement
 - Want weekly deep scans (not pre-commit blocking)
 
-**Idle-Only Scheduling**:
-```yaml
-code-linting-deep:
-  model: qwen2.5-coder:7b
-  schedule:
-    type: idle_only
-    min_idle_minutes: 15        # Mac idle >15 min
-    require_ac_power: true       # Only when plugged in
-    min_free_memory_gb: 7        # Need 7GB free before loading
-    time_window: "22:00-06:00"   # Optional: 10pm-6am only
-```
-
-**Characteristics**:
-- Speed: 10-15s ⚠️ NEEDS M2 AIR TESTING
-- Accuracy: 95% ⚠️ ASSUMED
-- Size: 4.7GB
-- **Target: Handle <5% of tasks here** ⚠️ ASSUMED
-
-**Full details**: See [01-MODELS.md - Level 3 section]
+**Full details**: See [01-MODELS.md - Level 3 section](01-MODELS.md#level-3-qwen25-coder-7b--optional)
 
 ---
 

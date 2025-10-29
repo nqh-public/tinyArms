@@ -1,8 +1,7 @@
-# Web Scraper Skill - Implementation Ideas
+# Web Scraper Skill - Decision Guide
 
 **Status**: Idea phase - NOT implemented
-**Purpose**: Extract structured data from web pages using MIT-licensed tools
-**Stack**: node-html-markdown (MIT) + NuExtract-1.5-tiny (MIT)
+**Purpose**: Decide which tools to use for HTML→Markdown→JSON extraction
 
 ---
 
@@ -64,6 +63,28 @@ flowchart TD
 
 ---
 
+## What Each Tool Does
+
+### NuExtract-1.5-tiny
+**Purpose**: Markdown/Text → Structured JSON extraction
+**Input**: Any text + JSON schema
+**Output**: Filled JSON with extracted values
+**License**: ✅ MIT (commercial use allowed)
+
+### ReaderLM-v2
+**Purpose**: Noisy HTML → Clean Markdown conversion
+**Input**: Raw HTML (with ads, nav, scripts)
+**Output**: Clean Markdown (semantic structure preserved)
+**License**: ❌ CC BY-NC 4.0 (non-commercial only)
+
+### node-html-markdown
+**Purpose**: HTML → Markdown conversion (rule-based)
+**Input**: HTML
+**Output**: Markdown
+**License**: ✅ MIT (commercial use allowed)
+
+---
+
 ## Tool Comparison Matrix
 
 | Criteria | node-html-markdown | ReaderLM-v2 | NuExtract-1.5-tiny |
@@ -73,440 +94,124 @@ flowchart TD
 | **Input format** | HTML | HTML | ANY text |
 | **Output format** | Markdown | Markdown/JSON | JSON only |
 | **Size** | ~50KB (library) | 935MB-3.1GB | 500MB |
-| **Speed** | ⚡ Instant (rule-based) | 🐌 67/36 tok/s | ⚡ ~100-150 tok/s |
+| **Speed** | ⚡ Instant (rule-based) | 🐌 67/36 tok/s (T4 GPU) | ⚠️ Unknown (needs M2 validation) |
 | **Context limit** | ♾️ Unlimited | 512K tokens | 8-20K tokens |
-| **Quality** | ⭐⭐⭐ Good | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐⭐⭐ GPT-4o-level |
-| **Customization** | ⚠️ Limited | ❌ None | ✅ Fine-tunable |
-| **Hallucinations** | 🚫 Zero (rules) | ⚠️ Low (generative) | 🚫 Zero (copy-paste) |
-| **Ollama support** | N/A (library) | ✅ milkey/reader-lm-v2 | ✅ sroecker/nuextract-tiny-v1.5 |
-| **tinyArms status** | ✅ Recommended | ❌ Excluded | ✅ Recommended |
+| **Quality** | ⭐⭐⭐ Good (rule-based) | ⭐⭐⭐⭐⭐ ROUGE-L 0.86 | ⭐⭐⭐⭐⭐ Beats GPT-4o with 40 examples |
+| **Ollama support** | N/A (npm library) | ✅ milkey/reader-lm-v2 | ✅ sroecker/nuextract-tiny-v1.5 |
+| **tinyArms status** | ✅ Recommended (MIT) | ❌ Excluded (license) | ✅ Recommended (MIT) |
 
 ---
 
 ## Pipeline Options
 
-### Option A: Minimal (MIT-only, Fast)
+### Option A: MIT-Licensed (Commercially Viable)
 ```
 HTML → node-html-markdown → Markdown → NuExtract-1.5-tiny → JSON
-       (instant, rules)                  (500MB, <1s)
+       (npm library, instant)           (500MB MIT model)
 ```
 
-**Pros**:
-- ✅ MIT licensed (no restrictions)
-- ✅ Fastest (no LLM for HTML)
-- ✅ Smallest footprint (500MB model only)
-
-**Cons**:
-- ⚠️ Lower HTML quality (10-30% vs ReaderLM)
-- ⚠️ Requires chunking (8-20k limit)
-- ⚠️ Struggles with very noisy HTML
-
-**Best for**: Pre-commit hooks, fast extraction, clean HTML sources
+**Trade-offs**:
+- ✅ MIT licensed (unlimited commercial use)
+- ✅ Fast (rule-based parser, no LLM for HTML step)
+- ✅ Small footprint (500MB model only)
+- ⚠️ Lower HTML→Markdown quality vs ReaderLM-v2 (estimated 10-30% worse)
+- ⚠️ Context limit: 8-20k tokens (requires chunking for long pages)
+- ⚠️ Rule-based parser struggles with very noisy HTML
 
 ---
 
-### Option B: Quality (Hybrid, Slower)
+### Option B: License-Blocked (Best Quality, Non-Commercial Only)
 ```
 HTML → ReaderLM-v2 → Markdown → NuExtract-1.5-tiny → JSON
-       (935MB, 2-5s)            (500MB, <1s)
+       (935MB, CC BY-NC 4.0)   (500MB MIT)
 ```
 
-**Pros**:
-- ✅ Best HTML quality (ROUGE-L 0.86)
-- ✅ 512K context (no chunking)
-- ✅ Handles noisy HTML perfectly
-
-**Cons**:
-- ❌ **LICENSE BLOCKER** (non-commercial only)
-- ⚠️ Slower (LLM inference for HTML)
-- ⚠️ Larger (935MB + 500MB = 1.4GB)
-
-**Best for**: Non-commercial research, quality-critical projects
+**Trade-offs**:
+- ✅ Best HTML→Markdown quality (ROUGE-L 0.86, 24.6% better than GPT-4o)
+- ✅ 512K context (no chunking needed)
+- ✅ Handles noisy HTML with semantic understanding
+- ❌ **LICENSE BLOCKER**: CC BY-NC 4.0 prohibits commercial use
+- ⚠️ Slower (LLM inference: 67 tok/s input, 36 tok/s output on T4 GPU)
+- ⚠️ Larger total size (1.4GB)
 
 ---
 
-### Option C: Extended Context (MIT-only, Larger)
+### Option C: Extended Context (MIT, Larger Model)
 ```
 HTML → node-html-markdown → Markdown → NuExtract-1.5 (3.8B) → JSON
-       (instant, rules)                  (2.18GB, 2-3s)
+       (npm library, instant)           (2.18GB MIT model)
 ```
 
-**Pros**:
+**Trade-offs**:
 - ✅ MIT licensed
-- ✅ 128K context (less chunking)
-- ✅ Better extraction quality
-
-**Cons**:
+- ✅ 128K context (validated, less chunking needed)
 - ⚠️ Larger model (2.18GB vs 500MB)
-- ⚠️ Slower inference (~30-50 tok/s)
-- ⚠️ Same HTML quality issues
-
-**Best for**: Long documents, complex extraction, storage not constrained
+- ⚠️ Slower inference (estimated, needs M2 validation)
+- ⚠️ Same HTML→Markdown quality issues as Option A
 
 ---
 
-## When to Use Which Approach
+## When They Work Together vs Alone
 
-### Use **node-html-markdown alone** (no extraction):
-- Converting documentation sites to Markdown
-- Archiving web content
-- Preparing content for human reading
-- Creating offline documentation
+### NuExtract alone (no HTML parsing)
+- Extract from API responses (already JSON/text)
+- Parse log files (plain text)
+- Extract from Markdown docs (already clean)
+- Parse config files (YAML, TOML)
 
-### Use **NuExtract alone** (no HTML parsing):
-- Extracting from API responses (already JSON/text)
-- Parsing log files (plain text)
-- Extracting from Markdown docs (already clean)
-- Parsing config files (YAML, TOML, INI)
+### node-html-markdown alone (no extraction)
+- Convert documentation to Markdown
+- Archive web content for reading
+- Prepare HTML for human consumption
 
-### Use **Full Pipeline** (HTML → Markdown → JSON):
-- Scraping product data from e-commerce sites
-- Extracting article metadata (author, date, tags)
-- Parsing API documentation (endpoints, parameters)
-- Building structured datasets from websites
-
-### Use **Chunking Strategy**:
-- Long articles (>15k tokens after Markdown conversion)
-- Multi-page documentation
-- API reference sites with many endpoints
-- Academic papers (if HTML source)
+### Full pipeline (HTML → Markdown → JSON)
+- Scrape structured data from websites
+- Extract article metadata
+- Parse API documentation
+- Build datasets from web pages
 
 ---
 
-## Implementation Considerations
+## Key Constraints from Research
 
-### 1. Context Length Management
+### NuExtract-1.5-tiny
+- **Context limit**: 8-20k tokens (from nuextract.md:37)
+- **Critical config**: Must use `temperature: 0` (Ollama defaults to 0.7 cause issues)
+- **Output**: 100% valid JSON (copy-paste only, zero hallucinations)
+- **Ollama**: `sroecker/nuextract-tiny-v1.5`
 
-**Problem**: NuExtract-1.5-tiny has 8-20k token limit
+### ReaderLM-v2
+- **Context**: 512K tokens (no chunking needed)
+- **Quality**: ROUGE-L 0.86 vs GPT-4o's 0.69
+- **License blocker**: CC BY-NC 4.0 = no commercial use
+- **Speed**: 67 tok/s input, 36 tok/s output (T4 GPU)
 
-**Solutions**:
-
-**A. Chunk by sections** (Recommended for docs):
-```typescript
-function chunkMarkdown(markdown: string, maxTokens: number) {
-  // Split on ## headers
-  const sections = markdown.split(/^## /gm);
-
-  const chunks = [];
-  let currentChunk = '';
-
-  for (const section of sections) {
-    const tokens = estimateTokens(section);
-
-    if (tokens > maxTokens) {
-      // Section too large, split by paragraphs
-      chunks.push(...splitByParagraphs(section, maxTokens));
-    } else if (estimateTokens(currentChunk + section) > maxTokens) {
-      // Current chunk full, start new one
-      chunks.push(currentChunk);
-      currentChunk = section;
-    } else {
-      // Add to current chunk
-      currentChunk += '\n\n## ' + section;
-    }
-  }
-
-  if (currentChunk) chunks.push(currentChunk);
-  return chunks;
-}
-```
-
-**B. Pre-filter content** (Recommended for web scraping):
-```typescript
-import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
-
-function extractMainContent(html: string) {
-  const doc = new JSDOM(html);
-  const reader = new Readability(doc.window.document);
-  const article = reader.parse();
-
-  return article?.content || html; // Fallback to full HTML
-}
-```
-
-**C. Use larger model**:
-```typescript
-// Check content size, switch model dynamically
-const tokens = estimateTokens(markdown);
-
-const model = tokens > 15000
-  ? 'nuextract:1.5' // 3.8B, 128K context
-  : 'sroecker/nuextract-tiny-v1.5'; // 494M, 8-20K context
-```
+### node-html-markdown
+- **License**: MIT (npm package)
+- **Speed**: 1.57x faster than Turndown (from research)
+- **Performance**: 176ms for 1MB HTML
+- **Quality**: "Clean, concise output" (library claim, not benchmarked)
 
 ---
 
-### 2. Temperature Configuration (CRITICAL)
+## Open Questions (Need Validation)
 
-**NuExtract requires `temperature: 0`** (Ollama defaults to 0.7)
-
-**Problem**: Higher temperature causes text repetition, invalid JSON
-
-**Solution**:
-```typescript
-import ollama from 'ollama';
-
-async function nuextract(text: string, schema: object) {
-  const response = await ollama.generate({
-    model: 'sroecker/nuextract-tiny-v1.5',
-    prompt: buildPrompt(text, schema),
-    options: {
-      temperature: 0, // REQUIRED for NuExtract
-      num_predict: 2048
-    }
-  });
-
-  return JSON.parse(response.response);
-}
-```
-
----
-
-### 3. Schema Design
-
-**Good schema** (explicit, typed):
-```json
-{
-  "article": {
-    "title": "string",
-    "author": "string",
-    "published_date": "date-time",
-    "tags": ["string"],
-    "word_count": "integer"
-  }
-}
-```
-
-**Bad schema** (vague, untyped):
-```json
-{
-  "data": "object",
-  "info": "string"
-}
-```
-
-**Tips**:
-- Use descriptive field names
-- Specify types (string, integer, date-time, enum)
-- Use arrays for multi-value fields
-- Provide enums for known values
-- Include optional fields explicitly
-
----
-
-### 4. Error Handling
-
-```typescript
-async function extractWithRetry(
-  html: string,
-  schema: object,
-  maxRetries: number = 3
-): Promise<object> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // Step 1: HTML → Markdown
-      const markdown = nodeHtmlMarkdown(html, {
-        useLinkReferenceDefinitions: false,
-        useInlineLinks: true
-      });
-
-      // Step 2: Check length
-      const tokens = estimateTokens(markdown);
-
-      if (tokens > 15000) {
-        // Chunk and extract
-        const chunks = chunkMarkdown(markdown, 15000);
-        const results = await Promise.all(
-          chunks.map(chunk => nuextract(chunk, schema))
-        );
-        return mergeResults(results);
-      }
-
-      // Step 3: Extract
-      return await nuextract(markdown, schema);
-
-    } catch (error) {
-      if (attempt === maxRetries) throw error;
-
-      // Exponential backoff
-      await sleep(1000 * Math.pow(2, attempt));
-    }
-  }
-}
-```
-
----
-
-## Performance Estimates (M2 MacBook Air)
-
-| Pipeline | HTML Size | Processing Time | Memory | Accuracy |
-|----------|-----------|----------------|--------|----------|
-| node-html-markdown + NuExtract-tiny | 100KB | <2s | ~1GB | ⭐⭐⭐⭐ |
-| node-html-markdown + NuExtract-tiny | 1MB | 3-5s | ~1GB | ⭐⭐⭐⭐ |
-| ReaderLM-v2 + NuExtract-tiny | 100KB | 5-8s | ~2GB | ⭐⭐⭐⭐⭐ |
-| ReaderLM-v2 + NuExtract-tiny | 1MB | 10-15s | ~2GB | ⭐⭐⭐⭐⭐ |
-
-**Note**: All estimates marked "(est.)" require M2 Air validation
-
----
-
-## Example Use Cases
-
-### 1. Scrape Product Data (E-commerce)
-```typescript
-const schema = {
-  "product": {
-    "name": "string",
-    "price": "number",
-    "currency": "string",
-    "in_stock": "boolean",
-    "rating": "number",
-    "review_count": "integer",
-    "images": ["string"]
-  }
-};
-
-const html = await fetch('https://example.com/product/123');
-const data = await extractWithPipeline(html, schema);
-// → { product: { name: "Widget", price: 29.99, ... } }
-```
-
-### 2. Extract Article Metadata (Content Sites)
-```typescript
-const schema = {
-  "article": {
-    "title": "string",
-    "author": "string",
-    "published_date": "date-time",
-    "updated_date": "date-time",
-    "tags": ["string"],
-    "category": "string",
-    "summary": "string"
-  }
-};
-
-const html = await fetch('https://blog.example.com/post/456');
-const metadata = await extractWithPipeline(html, schema);
-// → { article: { title: "How to...", author: "Jane", ... } }
-```
-
-### 3. Parse API Documentation (Developer Tools)
-```typescript
-const schema = {
-  "endpoints": [{
-    "method": "enum[GET,POST,PUT,DELETE,PATCH]",
-    "path": "string",
-    "description": "string",
-    "parameters": [{
-      "name": "string",
-      "type": "string",
-      "required": "boolean",
-      "description": "string"
-    }],
-    "response_example": "string"
-  }]
-};
-
-const html = await fetch('https://api.example.com/docs/reference');
-const apiSpec = await extractWithPipeline(html, schema);
-// → { endpoints: [{ method: "GET", path: "/users", ... }] }
-```
-
----
-
-## Integration with tinyArms
-
-### Skill Configuration
-```yaml
-# apps/tinyArms/config/skills/web-scraper.yaml
-name: web-scraper
-description: Extract structured data from web pages
-level: 2
-routing_keywords:
-  - scrape
-  - extract from url
-  - parse website
-  - web data
-
-dependencies:
-  npm:
-    - node-html-markdown
-    - jsdom
-    - @mozilla/readability
-  ollama:
-    - sroecker/nuextract-tiny-v1.5
-
-config:
-  default_parser: node-html-markdown # MIT licensed
-  max_tokens: 15000 # Chunk threshold
-  temperature: 0 # NuExtract requirement
-  retry_attempts: 3
-```
-
-### CLI Usage
-```bash
-# Extract product data
-tinyarms scrape https://example.com/product/123 \
-  --schema product-schema.json \
-  --output product-data.json
-
-# Extract article metadata (with chunking)
-tinyarms scrape https://longform.com/article \
-  --schema article-schema.json \
-  --chunk-size 15000
-
-# Use larger model for long content
-tinyarms scrape https://docs.example.com/api \
-  --schema api-schema.json \
-  --model nuextract:1.5 # 3.8B, 128K context
-```
-
----
-
-## Next Steps
-
-1. **Validation Testing** (Week 1):
-   - Install node-html-markdown + NuExtract-1.5-tiny on M2 Air
-   - Test 50 web pages (clean, noisy, long)
-   - Measure speed, memory, accuracy
-   - Document real performance vs estimates
-
-2. **Schema Library** (Week 2):
-   - Create common schemas (product, article, API, event)
-   - Test extraction quality per schema
-   - Refine field definitions based on results
-
-3. **Chunking Strategy** (Week 3):
-   - Implement section-based chunking
-   - Test on long documents (>20k tokens)
-   - Measure quality degradation from chunking
-   - Optimize merge logic for multi-chunk results
-
-4. **CLI Implementation** (Week 4):
-   - Build `tinyarms scrape` command
-   - Add schema validation
-   - Implement retry logic
-   - Add progress indicators
-
-5. **Documentation** (Week 5):
-   - Create user guide with examples
-   - Document common pitfalls (temperature, context)
-   - Add troubleshooting section
-   - Update index.md with web scraping use cases
+1. **M2 Air performance**: All speed/memory estimates unvalidated
+2. **HTML quality gap**: "10-30% worse" is speculation, not measured
+3. **Chunking strategy**: Best approach for long documents unknown
+4. **Integration patterns**: tinyArms CLI syntax undecided
 
 ---
 
 ## References
 
-- **Model Research**: `docs/model-research/nuextract.md`
-- **License Analysis**: `docs/model-research/readerlm-v2.md`
-- **Index**: `docs/model-research/index.md` (Web Scraping & Extraction Models section)
+- **NuExtract research**: `docs/model-research/nuextract.md`
+- **ReaderLM-v2 research**: `docs/model-research/readerlm-v2.md`
+- **Model index**: `docs/model-research/index.md` (Web Scraping section)
 - **node-html-markdown**: https://github.com/crosstype/node-html-markdown (MIT)
-- **NuExtract**: https://huggingface.co/numind/NuExtract-1.5 (MIT)
-- **Readability.js**: https://github.com/mozilla/readability (Apache 2.0)
+- **Turndown**: https://github.com/mixmark-io/turndown (MIT)
 
 ---
 
 **Last Updated**: 2025-10-28
-**Status**: Idea phase - awaiting validation testing
+**Status**: Decision guide only - no implementation yet

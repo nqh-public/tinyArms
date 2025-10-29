@@ -177,6 +177,53 @@ See new file for complete analysis.
 
 ---
 
+### readerlm-v2.md
+**Date**: 2025-10-28
+**Status**: Analysis complete - NOT RECOMMENDED (license blocker)
+
+**Summary**: ReaderLM-v2 (1.54B params, 935MB-3.1GB) specialized for HTML→Markdown/JSON conversion:
+- HTML→Markdown: ROUGE-L 0.86 (24.6% better than GPT-4o)
+- JSON extraction: F1 0.81 (competitive with GPT-4o)
+- Long context: 512K tokens (no chunking needed)
+- Speed: 67 tok/s input, 36 tok/s output on T4 GPU
+- Multilingual: 29 languages including Hungarian/Vietnamese
+
+**Critical Gap**: ⚠️ **LICENSE BLOCKER** - CC BY-NC 4.0 prohibits ALL commercial use (including tinyArms developer productivity tools). Commercial "pro" variant requires Jina AI licensing agreement.
+
+**Recommendation**: SKIP for commercial tinyArms. Consider MIT/Apache 2.0 alternatives (html-to-markdown, Turndown) or negotiate commercial license if HTML quality critical enough to justify $5K-50K/year investment.
+
+**Validation Needed**: N/A (license blocker eliminates production viability)
+
+---
+
+### nuextract.md
+**Date**: 2025-10-28
+**Status**: Analysis complete - Validation pending
+
+**Summary**: NuMind NuExtract family (494M-8B params, MIT license) specialized for structured JSON extraction:
+- **v1.5-tiny (494M)**: Beats GPT-4o zero-shot with 40 fine-tuning examples, ~500MB, Ollama native
+- **v1.5 (3.8B)**: Outperforms GPT-4o on English extraction, 8-20k context, 6 languages
+- **v2.0-8B**: Outperforms GPT-4.1 by 9+ F-Score, o3 by 3 points, multimodal (text+images)
+- 100% valid JSON output (no guided generation needed)
+- Copy-paste approach (zero hallucinations)
+- Fine-tunable with modest examples (40 samples → GPT-4o level)
+
+**Critical Gaps**:
+1. ❌ NO code generation/linting capability (extraction-only, NOT replacement for Qwen2.5-Coder)
+2. ❌ NO Hungarian/Vietnamese quality data (only 6 languages documented)
+3. ⚠️ Context: 8-20k tokens (vs ReaderLM-v2's 512K - chunking strategy needed for long docs)
+4. ❌ NO M2 Air performance data
+
+**Recommendation**: Add NuExtract-1.5-tiny (494M) as Level 1.5 Extraction Specialist. Complements ReaderLM-v2 for downstream parsing (ReaderLM HTML→Markdown, NuExtract Markdown→JSON). Conservative path: Validate against 50+ JSON extraction tasks (API responses, configs, metadata) before adopting.
+
+**Validation Needed** (1 week):
+1. Installation + temperature=0 config (Ollama defaults to 0.7 - causes text repetition)
+2. Extraction accuracy on 50 JSON schemas (>90% target)
+3. M2 Air performance benchmarks (<1s latency, <1GB memory)
+4. Multilingual quality (Hungarian/Vietnamese)
+
+---
+
 ## Research Process
 
 ### 1. Source Identification

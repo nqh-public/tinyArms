@@ -15,8 +15,10 @@ Quick reference for all researched models with recommendations beyond tinyArms c
 | [gemma-3-4b](#gemma-3-4b) | 3.3GB | Specialist | Vision + multilingual | ⚠️ Optional |
 | [granite-4.0-nano](#granite-40-nano) | 1-1.5GB | Level 1.5 Tools | MCP tool calling | 🔬 Validate |
 | [jan-nano-4b](#jan-nano-4b) | 2.3-4.3GB | Research Agent | Multi-source research | 🔬 Validate |
+| [readerlm-v2](#readerlm-v2) | 935MB-3.1GB | Web Scraping | HTML→Markdown conversion | ❌ License |
+| [nuextract](#nuextract) | 500MB-8GB | Extraction | Structured JSON extraction | 🔬 Validate |
 
-**Legend**: ✅ Production ready | ⚠️ Optional add-on | 🔬 Requires validation
+**Legend**: ✅ Production ready | ⚠️ Optional add-on | 🔬 Requires validation | ❌ Blocker
 
 ---
 
@@ -360,6 +362,104 @@ Quick reference for all researched models with recommendations beyond tinyArms c
 
 ---
 
+## Web Scraping & Extraction Models
+
+### readerlm-v2
+
+**What it is**: HTML-to-Markdown specialist (1.54B params, 935MB quantized, 512K context)
+**Best benchmark**: 0.86 ROUGE-L (24.6% better than GPT-4o), 0.81 F1 JSON extraction
+**Selected for**: ❌ NOT RECOMMENDED (CC BY-NC 4.0 license blocks commercial use)
+
+#### tinyArms Use Cases
+- URL → Markdown conversion for LLM consumption
+- API documentation extraction (clean HTML docs)
+- Blog content preprocessing (remove ads, nav, footer)
+- Documentation website crawling (full-page context)
+
+#### Beyond tinyArms (Broader Applications)
+**Content Aggregation**:
+- RSS feed content extraction (remove clutter)
+- News article scraping (clean text only)
+- Blog post archiving (preserve formatting)
+- Newsletter content extraction
+
+**Documentation Tools**:
+- API reference scraping (Stripe, Twilio, AWS docs)
+- Knowledge base migration (HTML → Markdown)
+- Static site generator input (clean content)
+- Offline documentation (web → portable Markdown)
+
+**Research**:
+- Academic paper extraction (HTML journals → Markdown)
+- Legal document scraping (case law, statutes)
+- Technical specification extraction (W3C, IETF RFCs)
+
+**Data Pipeline**:
+- Web scraping for ML datasets (clean text corpus)
+- Content migration (CMS → static site)
+- Multi-site content consolidation
+
+**Why this model**: State-of-the-art HTML→Markdown quality, 512K context (no chunking)
+
+**Limitations**: ❌ **LICENSE BLOCKER** (CC BY-NC 4.0 prohibits commercial use), ❌ NO code generation benchmarks
+
+**Doc**: [readerlm-v2.md](readerlm-v2.md)
+
+---
+
+### nuextract
+
+**What it is**: Structured extraction specialist (494M-8B params, MIT license, 100% valid JSON)
+**Best benchmark**: v2.0-8B outperforms GPT-4.1 by 9+ F-Score, o3 by 3 points
+**Selected for**: ✅ RECOMMENDED - Add NuExtract-1.5-tiny (494M) as Level 1.5 Extraction
+
+#### tinyArms Use Cases
+- API response parsing (nested JSON structures)
+- Configuration file extraction (YAML/TOML → structured data)
+- Documentation metadata extraction (frontmatter, tags, authors)
+- Code comment/docstring extraction (structured annotations)
+
+#### Beyond tinyArms (Broader Applications)
+**Document Processing**:
+- Invoice extraction (line items, totals, dates → JSON)
+- Resume parsing (skills, experience, education)
+- Contract analysis (parties, dates, obligations)
+- Receipt extraction (merchant, items, amounts)
+
+**E-commerce**:
+- Product catalog extraction (scrape → structured inventory)
+- Pricing intelligence (competitor sites → price DB)
+- Review analysis (extract ratings, pros/cons, sentiment)
+
+**Data Integration**:
+- Form data normalization (varied formats → standard schema)
+- Log parsing (unstructured logs → queryable fields)
+- Email parsing (headers, body, attachments → structured)
+- PDF extraction (tables, sections → JSON)
+
+**Knowledge Management**:
+- Wiki page metadata extraction (categories, links, authors)
+- FAQ structuring (question-answer pairs)
+- Glossary extraction (terms, definitions)
+
+**Research**:
+- Citation extraction (papers → author/title/year/venue)
+- Dataset metadata (columns, types, descriptions)
+- Experiment results (tables → structured data)
+
+**Customer Support**:
+- Ticket field extraction (priority, category, customer info)
+- Chat transcript parsing (intent, entities, sentiment)
+- Feedback categorization (feature requests, bugs)
+
+**Why this model**: MIT license (commercial-friendly), 100% valid JSON output, fine-tunable
+
+**Limitations**: ❌ NO HTML→Markdown (use ReaderLM-v2 first), ⚠️ Context: 8-20k tokens (vs ReaderLM-v2's 512K)
+
+**Doc**: [nuextract.md](nuextract.md)
+
+---
+
 ## Model Selection Decision Tree
 
 ### Use Case → Model Mapping
@@ -382,6 +482,13 @@ Quick reference for all researched models with recommendations beyond tinyArms c
 
 **Need multi-source research?**
 → jan-nano-4b (Research Agent, validate first)
+
+**Need HTML→Markdown conversion?**
+→ readerlm-v2 (❌ NOT RECOMMENDED - license blocker)
+→ Alternative: Traditional parsers (html-to-markdown, Turndown)
+
+**Need structured data extraction (JSON)?**
+→ nuextract-1.5-tiny (494M, Level 1.5, validate first)
 
 ---
 
@@ -453,6 +560,18 @@ Total: 5.8GB
 
 ---
 
+### Web Scraping & Extraction Stack
+```yaml
+Total: 3.0GB
+- embeddinggemma-300m (622MB) - routing
+- qwen2.5-coder-3b (1.9GB) - code tasks
+- nuextract-1.5-tiny (500MB) - structured extraction
+```
+**Use when**: API response parsing, config extraction, documentation metadata
+**Note**: ReaderLM-v2 excluded (CC BY-NC 4.0 license blocks commercial use)
+
+---
+
 ## Hardware Requirements by Stack
 
 | Stack | RAM (Minimum) | RAM (Recommended) | Storage |
@@ -463,6 +582,7 @@ Total: 5.8GB
 | Tool Calling | 16GB | 24GB | 4.0GB |
 | Research | 16GB | 32GB | 6.5GB |
 | Vision | 16GB | 24GB | 5.8GB |
+| Web Scraping | 8GB | 16GB | 3.0GB |
 
 **Notes**:
 - Minimum RAM: Allows running ONE model at a time (swap when needed)
@@ -482,8 +602,10 @@ Total: 5.8GB
 | gemma-3-4b | 60-80 tok/s (est.) | 3-5s per task | Vision tasks |
 | granite-4.0-nano | Unknown (likely 80-120 tok/s) | <2s per task | Tool calling |
 | jan-nano-4b | Unknown (likely 50-80 tok/s) | 3-10s per research | Research tasks |
+| readerlm-v2 | 67 tok/s input, 36 tok/s output (T4) | 2-5s per page | HTML→Markdown |
+| nuextract-1.5-tiny | Unknown (likely 100-150 tok/s) | <1s per extraction | JSON extraction |
 
-**Note**: All speeds marked "(est.)" require M2 Air validation
+**Note**: All speeds marked "(est.)" or "Unknown" require M2 Air validation
 
 ---
 

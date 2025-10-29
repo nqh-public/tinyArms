@@ -100,6 +100,120 @@ Document research analysis for AI model selection:
 
 ---
 
+## Index File (index.md)
+
+**Purpose**: Quick reference for all models with concise recaps and expanded use cases
+
+**Format**: `index.md` (single file for entire directory)
+
+**Structure**:
+```markdown
+# Model Research Index
+
+Quick reference for all researched models with recommendations beyond tinyArms core use cases.
+
+---
+
+## Quick Reference Table
+[Table with: Model, Size, Role, Best For, Status]
+
+---
+
+## {Category} Models
+[Group models by purpose: Routing, Code, General, Vision, Tools, Research]
+
+### {model-name}
+
+**What it is**: [1 sentence: params, size, specialization]
+**Best benchmark**: [Top 1-2 scores with exact numbers]
+**Selected for**: [tinyArms role or "OPTIONAL specialist"]
+
+#### tinyArms Use Cases
+[Bullet list of 3-5 tinyArms-specific uses]
+
+#### Beyond tinyArms (Broader Applications)
+**{Domain 1}**:
+[Bullet list of 2-3 applications]
+
+**{Domain 2}**:
+[Bullet list of 2-3 applications]
+
+**Why this model**: [1 sentence key advantage]
+**Limitations**: [❌ Top 1-2 gaps with symbols]
+**Doc**: [{model-name}.md]({model-name}.md)
+
+---
+
+## Model Selection Decision Tree
+[Use case → model mapping flowchart]
+
+---
+
+## Recommended Stacks by Use Case
+[Pre-configured stacks: Minimal, Balanced, Complete, etc.]
+
+---
+
+## Hardware Requirements by Stack
+[Table: Stack, RAM min/rec, Storage]
+
+---
+
+## Performance Characteristics
+[Table: Model, Speed, Latency Target, Use Case]
+
+---
+
+## Next Steps
+[Validation priorities with timeline]
+```
+
+**Required Sections**:
+1. **Quick Reference Table** - All models at-a-glance
+2. **Category Sections** - Models grouped by purpose (minimum 2 use case lists per model)
+3. **Model Selection Decision Tree** - Which model for which task
+4. **Recommended Stacks** - Pre-configured combinations (minimum 3 stacks)
+5. **Hardware Requirements** - RAM/storage by stack
+6. **Performance Characteristics** - Speed/latency table
+7. **Next Steps** - Validation priorities
+
+**Use Case Requirements**:
+- **tinyArms Use Cases**: 3-5 bullets (project-specific)
+- **Beyond tinyArms**: 2-4 domain categories with 2-3 applications each
+- **Domains**: Must be different from tinyArms (e.g., E-commerce, Education, Healthcare, Finance, DevOps)
+- **Purpose**: Help users understand model potential beyond initial scope
+
+**Model Grouping Categories**:
+- **Semantic Routing Models** - Embedding models (classification, similarity)
+- **Code-Specialized Models** - Code generation, linting, analysis
+- **General-Purpose Models** - Reasoning, writing, instruction-following
+- **Multimodal Specialist Models** - Vision, audio, multimodal understanding
+- **Tool Calling Specialists** - MCP, API orchestration, function calling
+- **Research Specialists** - Multi-source synthesis, deep research
+
+**Stack Configuration Rules**:
+- Provide 3-6 pre-configured stacks
+- Each stack must have: Name, Total size, Model list with sizes, "Use when" description
+- Stack names: Minimal, Balanced, Complete, [Domain]-focused (e.g., Tool Calling, Research, Vision)
+- Include storage total in GB (2 decimal places)
+
+**Quality Checks**:
+- [ ] All model links valid (no broken references)
+- [ ] Each model has ≥2 use case categories (tinyArms + Beyond)
+- [ ] Quick reference table includes all researched models
+- [ ] At least 3 recommended stacks defined
+- [ ] Hardware requirements table complete
+- [ ] Performance characteristics include all models
+- [ ] Next steps have timeline estimates
+
+**Update Frequency**: Regenerate when:
+- New model research added to directory
+- Model recommendations change (validation results)
+- New use case categories discovered
+- Stack configurations updated
+
+---
+
 ## Required Sections
 
 **Mandatory**:

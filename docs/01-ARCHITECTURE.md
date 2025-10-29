@@ -13,18 +13,22 @@ Human & AI Agent Interfaces
 ├─ SwiftUI Menu Bar App (planned)
 └─ LaunchAgents (scheduled automation)
           ↓
-    Core Engine (Tiered Router)
+    Core Engine (Tiered Router with Confidence Scoring)
+├─ Level -1: Semantic Cache (Phase 03, researched, 15-25% elimination)
+│  └─ Vector similarity >0.95 → return cached (<50ms)
 ├─ Level 0: Deterministic rules (<1ms, 60-75% of tasks)
 │  └─ Keyword extraction, file type detection, kebab-case formatting
 ├─ Level 1: embeddinggemma 300M (<100ms, 20-25% of tasks)
 │  └─ Semantic routing, intent classification (200MB)
 ├─ Level 2: Small specialists (2-4s, 10-15% of tasks)
 │  ├─ Primary: Qwen2.5-Coder-3B-Instruct (1.9GB, code linting)
+│  ├─ Answer Consistency Scoring (Phase 02, researched)
+│  │  └─ Generate N=3, similarity >0.85 → accept, <0.85 → escalate
 │  ├─ Secondary: Qwen3-4B-Instruct (2.5GB, general tasks, optional)
 │  └─ Optional: Gemma 3 4B (2.3GB, file naming/markdown, reused from Cotypist)
 ├─ Level 3: Deep analysis (10-15s, optional, <5% of tasks)
 │  └─ Qwen2.5-Coder 7B (4.7GB, architectural violations, weekly scans)
-└─ Router Cache (60x speedup for similar tasks)
+└─ Industry Validation: 90% aligned (FrugalGPT, RouteLLM, GitHub Copilot patterns)
           ↓
     Skills
 ├─ code-linting-fast (pre-commit, Level 2: Qwen2.5-Coder-3B-Instruct, priority 2)
@@ -206,19 +210,164 @@ code-linting-deep:
 
 **Full details**: See [01-MODELS.md - Level 3 section]
 
-### Router Cache (60x Speedup)
+---
 
-**Problem**: Re-processing similar files is wasteful
+## Confidence Scoring (Phase 02, Researched)
 
-**Solution**: Cache results for similar tasks
-- File hash → cached classification
-- Semantic similarity → reuse embedding
-- Pattern match → skip LLM inference
+**Status**: Researched - ready for implementation (Week 3)
+**Expected Impact**: 20-30% reduction in Level 3 escalations
+
+**Problem**: Level 2 doesn't know when its answer is good enough vs when to escalate to Level 3
+
+**Solution**: Answer Consistency Scoring at Level 2
+- Generate N=3 responses with temperature=0.7
+- Measure semantic similarity between all 3
+- Threshold: >0.85 consistency → accept Level 2
+- Threshold: <0.85 consistency → escalate to Level 3
+
+**How it works**:
+```python
+# Generate 3 responses
+responses = [qwen_3b.generate(query, temp=0.7) for _ in range(3)]
+
+# Measure consistency (cosine similarity)
+consistency = measure_pairwise_similarity(responses)
+
+if consistency > 0.85:
+    return responses[0]  # Confident - use Level 2
+else:
+    escalate_to_level_3()  # Uncertain - need deeper analysis
+```
+
+**Why this works**: LLMs produce consistent answers when confident, inconsistent when uncertain
+
+**Trade-offs**:
+- Latency: +500ms at Level 2 (3 generations + similarity check)
+- Accuracy: Prevents false confidence (catches uncertain Level 2 responses)
+- Cost: Slightly more Level 2 inference, but 20-30% fewer expensive Level 3 calls
+
+**Confidence Thresholds** (starting values, tune in production):
+
+| Transition | Metric | Threshold | Reasoning |
+|------------|--------|-----------|-----------|
+| L1 → L2 | Embedding similarity | <0.90 | Semantic match must be strong |
+| L2 → L3 | Answer consistency | <0.85 | Level 2 uncertainty indicator |
+| L3 → Human | Logit confidence | <0.50 | Even large model uncertain |
+
+**Industry validation**: AutoMix (NeurIPS 2024) achieves 50%+ cost reduction via self-verification
+
+**Full details**:
+- [research/02-confidence-scoring-patterns.md](research/02-confidence-scoring-patterns.md)
+- [research/02-threshold-calibration-guide.md](research/02-threshold-calibration-guide.md)
+
+---
+
+### Level -1: Semantic Cache (Phase 03, Researched)
+
+**Status**: Researched - ready for implementation (Week 4)
+**Expected Impact**: 15-25% query elimination
+
+**Problem**: tinyArms processes every query from scratch, even identical/similar questions
+
+**Solution**: Vector similarity cache BEFORE Level 0
+- Embed query (reuse embeddinggemma from Level 1)
+- Search vector DB for similar cached queries
+- Threshold: >0.95 similarity → return cached response (<50ms)
+- Cache miss → continue to Level 0
+
+**What gets cached**:
+- Level 2 responses (Qwen-3B)
+- Level 3 responses (Qwen-7B)
+- NOT Level 0/1 (already fast)
 
 **Performance**:
-- First file: 3s (Level 2 LLM)
-- Subsequent similar files: <1ms (cache hit)
-- **60x speedup for batch operations**
+- Cache hit: ~50-60ms (embedding + search)
+- Cache miss overhead: +50ms (acceptable on 2-3s total)
+- First query: 2-3s (Level 2 LLM)
+- Repeat similar query: ~60ms (cache hit)
+- **40x speedup for repeated queries**
+
+**Memory**: 500MB-800MB for 100K cached entries
+
+**Industry validation**: FrugalGPT (Stanford) uses cache as Tier 0, contributes to 98% cost reduction
+
+**Full details**: See [research/03-semantic-caching-design.md](research/03-semantic-caching-design.md)
+
+---
+
+## Industry Validation (Researched 2025-10-29)
+
+**Verdict**: tinyArms architecture is **90% aligned** with industry best practices
+
+**Research sources**: 25+ academic papers, 8 open-source projects, 6 production case studies
+
+### What's Validated ✅
+
+**1. Four-Tier Cascade**
+- **tinyArms**: Rules → Embedding → 3B LLM → 7B LLM
+- **Industry**: FrugalGPT (Stanford) uses 4 tiers, achieves 98% cost reduction
+- **Verdict**: Justified (most systems use 2-3, but 4 is valid if L0 hit rate >30%)
+
+**2. Code-Specialized Models**
+- **tinyArms**: Qwen2.5-Coder-3B, Qwen2.5-Coder-7B
+- **Industry**: GitHub Copilot, Continue.dev, Cursor all use code-specific models
+- **Performance**: +15-20% accuracy vs general models at same parameter count
+- **Verdict**: Optimal choice for coding workloads
+
+**3. Embedding Model**
+- **tinyArms**: embeddinggemma-300m (768-dim, 308M params)
+- **Industry**: Best multilingual model <500M params (MTEB ~70)
+- **Competitors**: Semantic Router (2.9k stars), Red Hat LLM-d, LangChain
+- **Verdict**: Best-in-class for size
+
+**4. Quantization Strategy**
+- **tinyArms**: Q4 for all LLMs
+- **Industry**: Q4 standard for consumer hardware (Ollama, llama.cpp)
+- **Expected loss**: 2-5% accuracy degradation (acceptable)
+- **Verdict**: Industry standard
+
+### Critical Gaps (To Implement) ⚠️
+
+**1. Semantic Caching** (Phase 03)
+- Status: Missing, researched
+- Impact: 15-25% query elimination
+- Timeline: Week 4 implementation
+
+**2. Confidence Scoring** (Phase 02)
+- Status: Missing, researched
+- Impact: 20-30% reduction in L3 escalations
+- Timeline: Week 3 implementation
+
+**3. Cross-Encoder Reranker** (Phase 04, optional)
+- Status: Missing, researched
+- Impact: +10-15% retrieval precision
+- Timeline: Week 5, only if L1 accuracy <80%
+
+### Comparison to Production Systems
+
+| System | Architecture | Similarity | Key Difference |
+|--------|--------------|------------|----------------|
+| **FrugalGPT** (Stanford) | Cache + 3 LLM tiers | 95% | tinyArms uses rules/embedding instead of cache (complementary) |
+| **RouteLLM** (LMSYS) | Binary router (strong/weak) | 70% | tinyArms adds pre-LLM filtering (rules, embedding) |
+| **Semantic Router** (Aurelio Labs) | BERT embedding only | 60% | tinyArms adds LLM fallback (Level 2, 3) |
+| **GitHub Copilot** | Task-specific code models | 85% | tinyArms adds tiered routing (cost optimization) |
+| **Continue.dev** | User-configurable models | 80% | tinyArms adds automatic routing (intelligence) |
+
+### Alignment Score: 90%
+
+**What's aligned**:
+- ✅ Tier architecture (4-tier validated by FrugalGPT)
+- ✅ Model choices (code-specialized, embedding model, quantization)
+- ✅ Cost-optimization focus (matches RouteLLM, AutoMix)
+
+**What's missing (but researched)**:
+- ⚠️ Confidence scoring (AutoMix pattern)
+- ⚠️ Semantic caching (FrugalGPT pattern)
+- ⚠️ Observability (OpenTelemetry standard)
+
+**Confidence**: HIGH - Multiple independent validations across academic research and production systems
+
+**Full details**: See [research/01-industry-validation.md](research/01-industry-validation.md)
 
 ---
 

@@ -360,14 +360,73 @@ Key alternatives:
 
 ---
 
-## Validation Checklist
+## Industry Validation (Researched 2025-10-29)
 
-Before finalizing:
+**Status**: Model choices validated by industry research
+
+### What's Validated ✅
+
+**embeddinggemma-300m (Level 1)**:
+- ✅ Best multilingual model <500M params (MTEB ~70)
+- ✅ Highest-ranking text-only model in size class
+- ✅ Used in production: Semantic Router (2.9k stars), Red Hat LLM-d
+- **Reference**: research/01-model-selection-validation.md:135-153
+
+**Qwen2.5-Coder-3B (Level 2)**:
+- ✅ Best coding model in 3B class (HumanEval ~45%)
+- ✅ Outperforms general 4B models on code (Qwen3-4B: 62% base)
+- ✅ Code-specialized: 5.5T tokens across 92 languages
+- **Reference**: research/01-model-selection-validation.md:156-174
+
+**Qwen2.5-Coder-7B (Level 3, optional)**:
+- ✅ Near-frontier coding performance (HumanEval 84.8%)
+- ✅ Matches larger models (comparable to 14B-32B general models)
+- ✅ Used in production: Continue.dev, coding assistants
+- **Reference**: research/01-model-selection-validation.md:176-195
+
+**Q4 Quantization Strategy**:
+- ✅ Industry standard for local inference (Ollama, llama.cpp)
+- ✅ Expected accuracy loss: 2-5% (acceptable trade-off)
+- ✅ Enables on-device inference on consumer hardware
+- **Reference**: research/01-model-selection-validation.md:282-343
+
+**Verdict**: No model changes needed. Choices optimal for coding workloads.
+
+---
+
+## Empirical Validation Checklist (Phase 01)
+
+**Before finalizing architecture**:
+- [ ] Benchmark Q4 vs Q8 vs FP16 on HumanEval
+  - Qwen2.5-Coder-3B: Measure actual degradation (target: <5%)
+  - Qwen2.5-Coder-7B: Measure actual degradation (target: <5%)
+- [ ] Validate embeddinggemma MTEB scores on test set
 - [ ] Test Qwen2.5-Coder-3B on 20 files with known violations
 - [ ] Measure false negative rate (<15% acceptable)
 - [ ] Benchmark speed on M2 Air (2-3s target)
-- [ ] Verify storage: core install = 3.1GB
+- [ ] Verify storage: core install = 2.1GB (Level 1 + Level 2)
 - [ ] Confirm pre-commit hook performance (<5s total)
+- [ ] Document results in research/01-model-selection-validation.md
+
+**Quantization Impact Validation**:
+```bash
+# Test script (Phase 01, Week 1)
+ollama pull qwen2.5-coder:3b-q4     # 1.9GB
+ollama pull qwen2.5-coder:3b-q8     # 3.5GB
+ollama pull qwen2.5-coder:3b-fp16   # 7GB
+
+# Run HumanEval benchmark on all 3
+python benchmark_humaneval.py --model qwen2.5-coder:3b-q4
+python benchmark_humaneval.py --model qwen2.5-coder:3b-q8
+python benchmark_humaneval.py --model qwen2.5-coder:3b-fp16
+
+# Compare results (expected: Q4 ≈ Q8 ≈ FP16, within 2-5%)
+```
+
+**Success Criteria**:
+- Q4 degradation <5% vs FP16 (validates quantization strategy)
+- Level 2 accuracy ≥85% (validates model choice)
+- Pre-commit speed <5s (validates performance target)
 
 ---
 

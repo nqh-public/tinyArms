@@ -61,6 +61,8 @@ Human & AI Agent Interfaces
 
 ### Level 0: Deterministic Rules (<1ms)
 
+**Status**: ⚠️ Coverage % assumed (needs validation)
+
 **Purpose**: Instant responses for pattern-matching tasks
 
 **Examples**:
@@ -74,7 +76,7 @@ Human & AI Agent Interfaces
 - Speed: <1ms
 - Accuracy: 100% (when rules match)
 - Size: 0 bytes
-- **Target: Handle 60-75% of tasks here**
+- **Target: Handle 60-75% of tasks here** ⚠️ ASSUMED (research range: 10-40% in production systems)
 
 **Implementation**:
 ```typescript
@@ -92,9 +94,11 @@ function level0Router(task: Task): Result | null {
 
 ### Level 1: Tiny Embeddings (<100ms)
 
+**Status**: ✅ Model validated | ⚠️ Thresholds assumed
+
 **Purpose**: Semantic understanding layer for routing (NOT generative)
 
-**Model**: embeddinggemma:300m (200MB)
+**Model**: embeddinggemma:300m (200MB) ✅ VALIDATED (best multilingual <500M params)
 **Speed**: <15ms per embedding on M2
 **Output**: 768-dimensional vectors
 
@@ -102,13 +106,13 @@ function level0Router(task: Task): Result | null {
 1. **File type classification**
    - Input: "Screenshot of mobile app"
    - Output: `{type: "screenshot", confidence: 0.92}`
-   - If confidence >= 0.80 → Use Level 0 rules
+   - If confidence >= 0.80 → Use Level 0 rules ⚠️ THRESHOLD ASSUMED
    - If confidence < 0.80 → Escalate to Level 2
 
 2. **Intent extraction from voice**
    - Input: "um, like, rename this to hero mockup"
    - Output: `{intent: "rename_file", confidence: 0.88}`
-   - If confidence >= 0.80 → Execute rename action
+   - If confidence >= 0.80 → Execute rename action ⚠️ THRESHOLD ASSUMED
    - If confidence < 0.80 → Ask user for clarification
 
 3. **Constitutional principle similarity search**
@@ -123,9 +127,9 @@ function level0Router(task: Task): Result | null {
 
 **Characteristics**:
 - Speed: <100ms
-- Accuracy: 85-90% (classification)
+- Accuracy: 85-90% (classification) ⚠️ ASSUMED (needs tinyArms workload testing)
 - Size: 200MB
-- **Target: Handle 20-25% of tasks here**
+- **Target: Handle 20-25% of tasks here** ⚠️ ASSUMED
 
 **Full details**: See [EMBEDDINGGEMMA.md - Level 1 section]
 
@@ -136,12 +140,15 @@ function level0Router(task: Task): Result | null {
 **Multi-Model Architecture**:
 
 #### Primary: Qwen2.5-Coder-3B-Instruct (Code Linting)
+
+**Status**: ✅ Model validated | ⚠️ Constitutional accuracy needs testing
+
 - **Size**: 1.9GB
 - **Role**: Constitutional code linting, pattern detection
-- **Benchmarks**: 84.1% HumanEval, 73.6% MBPP, 72.1% MultiPL-E avg
-- **Speed**: 80-110 tokens/sec on M2 Air (~2-3s per file)
+- **Benchmarks**: 84.1% HumanEval, 73.6% MBPP, 72.1% MultiPL-E avg ✅ VALIDATED
+- **Speed**: 80-110 tokens/sec on M2 Air (~2-3s per file) ⚠️ NEEDS M2 AIR TESTING
 - **Detects**: Hardcoded colors, magic numbers, file size violations, simple DRY, import aliases
-- **Accuracy**: 85% (15% miss rate on complex violations)
+- **Accuracy**: 85% (15% miss rate on complex violations) ⚠️ ASSUMED (needs constitutional linting testing)
 
 **Why Qwen2.5-Coder-3B?**
 - ✅ 84.1% HumanEval (beats Qwen3-4B-Instruct's 62% base)
@@ -161,20 +168,22 @@ function level0Router(task: Task): Result | null {
 - **Custom specialists** - Add per-skill via config
 
 **Characteristics**:
-- Speed: 2-4s
-- Accuracy: 85-90%
+- Speed: 2-4s ⚠️ NEEDS M2 AIR TESTING
+- Accuracy: 85-90% ⚠️ ASSUMED
 - Size: 1.9-2.5GB each
-- **Target: Handle 10-15% of tasks here**
+- **Target: Handle 10-15% of tasks here** ⚠️ ASSUMED
 
 **Full details**: See [01-MODELS.md - Level 2 section]
 
 ### Level 3: Code Specialists (10-15s, Optional)
 
+**Status**: ✅ Model validated | ⚠️ Accuracy needs testing
+
 **Purpose**: Deep architectural analysis (optional)
 
-**Model**: Qwen2.5-Coder 7B (4.7GB)
-**Speed**: 30-50 tokens/sec on M2 Air (~10-15s per file)
-**Benchmarks**: 88.4% HumanEval (SOTA for 7B)
+**Model**: Qwen2.5-Coder 7B (4.7GB) ✅ VALIDATED
+**Speed**: 30-50 tokens/sec on M2 Air (~10-15s per file) ⚠️ NEEDS M2 AIR TESTING
+**Benchmarks**: 88.4% HumanEval (SOTA for 7B) ✅ VALIDATED
 
 **What it catches (vs Level 2)**:
 - Architectural anti-patterns (God objects, circular deps)
@@ -183,7 +192,7 @@ function level0Router(task: Task): Result | null {
 - Component decomposition issues
 - Implicit design pattern violations
 
-**Accuracy**: 95% (vs 85% for Level 2)
+**Accuracy**: 95% (vs 85% for Level 2) ⚠️ ASSUMED (needs constitutional linting testing)
 
 **When to install**:
 - Level 2 misses >10% violations
@@ -203,10 +212,10 @@ code-linting-deep:
 ```
 
 **Characteristics**:
-- Speed: 10-15s
-- Accuracy: 95%
+- Speed: 10-15s ⚠️ NEEDS M2 AIR TESTING
+- Accuracy: 95% ⚠️ ASSUMED
 - Size: 4.7GB
-- **Target: Handle <5% of tasks here**
+- **Target: Handle <5% of tasks here** ⚠️ ASSUMED
 
 **Full details**: See [01-MODELS.md - Level 3 section]
 
@@ -373,10 +382,14 @@ else:
 
 ## Skills
 
+**Status**: ⚠️ ALL SKILLS 0% IMPLEMENTED (design only)
+
 ### code-linting-fast (Pre-commit, Priority 2)
 
+**Status**: ⚠️ 0% IMPLEMENTED
+
 **Model**: Qwen2.5-Coder-3B-Instruct (Level 2)
-**Speed**: 2-3s per file
+**Speed**: 2-3s per file ⚠️ NEEDS TESTING
 **Source**: `.specify/memory/constitution.md` (17 principles)
 
 **Detects**:
@@ -387,7 +400,7 @@ else:
 - Simple DRY violations
 - Design token violations
 
-**Accuracy**: 85% (15% miss rate on complex violations)
+**Accuracy**: 85% (15% miss rate on complex violations) ⚠️ ASSUMED
 
 **Usage**:
 ```bash
@@ -400,8 +413,10 @@ tinyarms run code-linting-fast src/
 
 ### code-linting-deep (Weekly Scans, Optional)
 
+**Status**: ⚠️ 0% IMPLEMENTED
+
 **Model**: Qwen2.5-Coder 7B (Level 3, optional)
-**Speed**: 10-15s per file
+**Speed**: 10-15s per file ⚠️ NEEDS TESTING
 **Schedule**: Sunday 2am (idle-only)
 
 **Detects** (vs fast):
@@ -410,7 +425,7 @@ tinyarms run code-linting-fast src/
 - Cross-file pattern analysis
 - Component decomposition issues
 
-**Accuracy**: 95%
+**Accuracy**: 95% ⚠️ ASSUMED
 
 **Usage**:
 ```yaml
@@ -423,8 +438,10 @@ skills:
 
 ### file-naming (Optional Specialist)
 
+**Status**: ⚠️ 0% IMPLEMENTED
+
 **Model**: Gemma 3 4B (Level 2, optional)
-**Speed**: 2-4s per file
+**Speed**: 2-4s per file ⚠️ NEEDS TESTING
 **Schedule**: Batch every 5 mins
 
 **Transforms**:
@@ -438,8 +455,10 @@ tinyarms run file-naming ~/Downloads --dry-run
 
 ### markdown-analysis (.specify/memory/)
 
+**Status**: ⚠️ 0% IMPLEMENTED
+
 **Model**: Gemma 3 4B (Level 2, optional)
-**Speed**: 2-4s per file
+**Speed**: 2-4s per file ⚠️ NEEDS TESTING
 **Schedule**: Every 2 hours
 
 **Detects**:
@@ -454,8 +473,10 @@ tinyarms run markdown-analysis ~/.specify/memory/
 
 ### audio-actions (MacWhisper → Actions)
 
+**Status**: ⚠️ 0% IMPLEMENTED
+
 **Model**: Gemma 3 4B (Level 2, optional)
-**Speed**: 3-5s per transcription
+**Speed**: 3-5s per transcription ⚠️ NEEDS TESTING
 **Source**: MacWhisper exports to `~/Documents/Transcriptions/`
 
 **Extracts**:
@@ -474,11 +495,13 @@ tinyarms run markdown-analysis ~/.specify/memory/
 
 ## MCP Integration (Bidirectional)
 
+**Status**: ⚠️ 0% IMPLEMENTED (design only, needs pattern validation)
+
 ### AI Agents → tinyArms
 
 **Purpose**: Claude Code/Aider/Cursor call tinyArms tools via MCP
 
-**Available Tools**:
+**Available Tools**: ⚠️ DESIGN ONLY (needs MCP server pattern research)
 - `rename_file` - Intelligent file naming
 - `lint_code` - Constitutional code review
 - `analyze_changes` - Markdown change detection
@@ -521,11 +544,13 @@ Returns: Constitutional violations with line refs
 
 ## Storage Management
 
+**Status**: ⚠️ Schema design needs validation (research Langfuse/Continue.dev patterns)
+
 ### SQLite Database
 
 **Purpose**: Persistent state management
 
-**Tables**:
+**Tables**: ⚠️ DESIGN ONLY (needs validation from production systems)
 - `task_history` - Execution records
 - `user_feedback` - Learning data
 - `performance_metrics` - Speed/accuracy tracking
@@ -558,9 +583,11 @@ tinyarms config show --json | jq '.skills["code-linting-fast"]'
 
 ## LaunchAgent Automation
 
+**Status**: ⚠️ Design needs validation (research idle detection + power-aware patterns)
+
 **Purpose**: macOS-native scheduling
 
-**Features**:
+**Features**: ⚠️ DESIGN ONLY (needs validation from existing apps)
 - Time-based triggers (every 2 hours, every 5 mins)
 - File watching (instant triggers)
 - Power-aware (AC only for Level 3)
@@ -599,9 +626,11 @@ tinyarms config show --json | jq '.skills["code-linting-fast"]'
 
 ## SwiftUI Menu Bar App (Planned)
 
+**Status**: ⚠️ 0% IMPLEMENTED (design only, needs UX testing)
+
 **Purpose**: Native macOS interface for non-coders
 
-**Features**:
+**Features**: ⚠️ DESIGN ONLY
 - 🦖 Menu bar icon with status indicators
 - Quick skill execution (⌘1, ⌘2, ⌘3)
 - Activity log viewer
@@ -617,30 +646,36 @@ tinyarms config show --json | jq '.skills["code-linting-fast"]'
 
 ### Speed (M2 MacBook Air)
 
+**Status**: ⚠️ ALL ESTIMATES (needs M2 Air benchmarking)
+
 | Level | Model | Speed | Coverage |
 |-------|-------|-------|----------|
-| 0 | Rules | <1ms | 60-75% |
-| 1 | embeddinggemma | <100ms | 20-25% |
-| 2 | Qwen2.5-Coder-3B | 2-3s | 10-15% |
-| 3 | Qwen2.5-Coder 7B | 10-15s | <5% |
+| 0 | Rules | <1ms ⚠️ | 60-75% ⚠️ |
+| 1 | embeddinggemma | <100ms ⚠️ | 20-25% ⚠️ |
+| 2 | Qwen2.5-Coder-3B | 2-3s ⚠️ | 10-15% ⚠️ |
+| 3 | Qwen2.5-Coder 7B | 10-15s ⚠️ | <5% ⚠️ |
 
 ### Memory (M2 MacBook Air 16GB)
 
+**Status**: ⚠️ ALL ESTIMATES (needs Ollama memory usage research)
+
 | State | RAM Usage | Free RAM |
 |-------|-----------|----------|
-| Idle | ~100MB | ~15.9GB |
-| Level 1 loaded | ~300MB | ~15.7GB |
-| Level 2 loaded | ~3.2GB | ~12.8GB |
-| Level 3 loaded | ~6GB | ~10GB |
-| Peak (L2 + L3) | ~9.5GB | ~6.5GB ✅ SAFE |
+| Idle | ~100MB ⚠️ | ~15.9GB |
+| Level 1 loaded | ~300MB ⚠️ | ~15.7GB |
+| Level 2 loaded | ~3.2GB ⚠️ | ~12.8GB |
+| Level 3 loaded | ~6GB ⚠️ | ~10GB |
+| Peak (L2 + L3) | ~9.5GB ⚠️ | ~6.5GB |
 
 ### Battery Impact (Estimates)
 
+**Status**: ⚠️ ALL ESTIMATES (needs MLPerf Mobile + M2 energy research)
+
 | Configuration | Impact |
 |--------------|--------|
-| Minimal schedule | ~1%/day |
-| With code linting | ~3%/day |
-| File watching only | ~0.5%/day |
+| Minimal schedule | ~1%/day ⚠️ |
+| With code linting | ~3%/day ⚠️ |
+| File watching only | ~0.5%/day ⚠️ |
 | **Recommended** | Hybrid (watching + scheduled, L3 on-demand) |
 
 ---

@@ -28,46 +28,152 @@ Research and analysis for model selection in tinyArms.
 
 ---
 
-### qwen2.5-coder-3b.md
+### qwen2.5-coder-3b.md (DEPRECATED - See qwen2.5-coder-3b-instruct.md)
 **Date**: 2025-10-27
-**Status**: Production ready (selected as Level 2 Primary)
+**Status**: Replaced by comprehensive research (2025-10-28)
 
-**Summary**: Qwen2.5-Coder-3B code-specialized model:
-- HumanEval: 84.1% (best in sub-4B class)
-- MBPP: 73.6%, MultiPL-E: 72.1% (92 languages)
-- Training: 5.5T code tokens (vs <1T for general models)
-- Speed: 80-110 tok/s on M2 Air (estimated)
-- LiveCodeBench: 35.1 (beats GPT-4o-mini)
+**Note**: This file has been superseded by `qwen2.5-coder-3b-instruct.md` which contains:
+- Complete benchmark extraction (HumanEval, MBPP, MultiPL-E, BigCodeBench, LiveCodeBench)
+- Architecture specifications (3.09B params, 36 layers, GQA details)
+- Training data breakdown (5.5T tokens: 70% code, 20% text, 10% math)
+- Critical gaps analysis (tool calling, instruction following, multilingual support, Mac performance)
+- Comprehensive validation test plan (5 phases, 1-2 weeks)
 
-**Critical Gap**: No tool calling/IFEval benchmarks (consider Granite for tool calling)
-
-**Recommendation**: Keep as Level 2 Primary (proven code linting), supplement with Granite-H-300M for tool calling
-
-**Validation Needed**:
-1. Constitutional linting accuracy (20 files with known violations)
-2. Speed verification on M2 Air (target: 2-3s per file)
-3. Multilingual code support (Hungarian/Vietnamese comments)
+See new file for complete analysis.
 
 ---
 
-### embeddinggemma-300m.md
-**Date**: 2025-10-27
-**Status**: Production ready (selected as Level 1)
+### qwen2.5-coder-3b-instruct.md
+**Date**: 2025-10-28
+**Status**: Production ready (selected as Level 2 Primary) - COMPREHENSIVE RESEARCH
 
-**Summary**: EmbeddingGemma-300M semantic routing model:
-- MTEB: 68.4 (best quality under 500MB)
-- Speed: <15ms per embedding on M2 Air (verified)
-- Multilingual: 100+ languages (Hungarian, Vietnamese)
-- Size: 200MB (350MB loaded footprint)
+**Summary**: Qwen2.5-Coder-3B-Instruct code-specialized model (VERIFIED from official sources):
+- **HumanEval**: 84.1% pass@1, 80.5% pass@1+ (arXiv:2409.12186)
+- **MBPP**: 73.6% pass@1, 62.4% pass@1+ (arXiv:2409.12186)
+- **BigCodeBench**: 35.8 Full, 14.2 Hard (technical report ref)
+- **LiveCodeBench**: 10.8 pass@1 (real-world code, 2024.07-2024.11)
+- **MultiPL-E**: 92 languages, 5/8 mainstream >60% (Python, JS, TS, Java, C++, C#, PHP, Bash)
+- **Training**: 5.5T tokens (70% code, 20% text, 10% math) from GitHub, Stack Overflow
+- **Architecture**: 3.09B params (2.77B non-embed), 36 layers, GQA (16 query, 2 KV heads), 32K context
+- **Size**: 1.9GB (Ollama), ~3.2GB loaded memory (est.)
+- **Speed**: 80-110 tok/s on M2 Air (estimated from similar models)
+- **License**: Apache 2.0 (commercial use allowed)
 
-**Critical Gap**: No code-specific benchmarks (CodeSearchNet), similarity threshold needs tuning (currently 0.75 arbitrary)
+**Critical Gaps** (ALL explicitly documented with validation plans):
+1. ❌ Tool calling (no BFCLv3 score) - use Granite-H-300M/1B for MCP
+2. ❌ Instruction following (no IFEval score) - code specialization may compensate
+3. ❌ Multilingual natural language (Hungarian/Vietnamese comments unknown)
+4. ❌ Mac M2 Air performance (speed/memory/battery estimates need validation)
+5. ❌ Quantization impact (Q4/Q8 accuracy degradation unknown)
 
-**Recommendation**: Keep as Level 1 (semantic routing), tune similarity threshold empirically (test 0.6-0.85 range)
+**Recommendation**: Keep as Level 2 Primary (no better alternative in sub-4B class). Supplement with Granite-H-300M for tool calling (Option B, validate first).
+
+**Validation Needed** (5 phases, 1-2 weeks):
+1. Installation (✅ COMPLETED - Ollama confirmed)
+2. Code linting accuracy (20 files with known violations, ≥85% target)
+3. Performance benchmarking (M2 Air 16GB: speed, memory, cold start, battery)
+4. Multilingual support (Hungarian/Vietnamese comments, ≤10% degradation)
+5. Instruction following (17 constitutional principles, ≥80% adherence)
+
+---
+
+### qwen2.5-coder-7b.md
+**Date**: 2025-10-28
+**Status**: Analysis complete - OPTIONAL Level 3 (accuracy vs speed trade-off)
+
+**Summary**: Qwen2.5-Coder-7B code-specialized model:
+- HumanEval: 88.4% (+5.1% over 3B), MBPP: 83.5%, MultiPL-E: 76.5%
+- Training: 5.5T code tokens (same as 3B)
+- Size: 4.7GB (2.5x larger than 3B)
+- Speed: 30-50 tok/s estimated (2-3x slower than 3B)
+- LiveCodeBench: 37.6 (beats CodeStral-22B despite 3x smaller)
+
+**Critical Gap**: Too slow for pre-commit (10-15s per file). Only suitable for weekly deep scans.
+
+**Recommendation**: Add as OPTIONAL Level 3 (weekly scans ONLY), keep 3B for pre-commit. Skip if storage/RAM constrained or pre-commit is only use case.
 
 **Validation Needed**:
-1. Hungarian/Vietnamese embedding quality
-2. Routing threshold optimization (test 0.6, 0.7, 0.75, 0.8, 0.85)
-3. Code embedding quality (similarity detection)
+1. Speed benchmarks on M2 Air (confirm 30-50 tok/s estimate)
+2. Complex violation detection (semantic DRY, architectural anti-patterns)
+3. Weekly scan time measurement (500 files, acceptable if <30min)
+4. Memory usage (estimated 6-8GB loaded)
+
+---
+
+### gemma-3-4b.md
+### embeddinggemma-300m.md
+**Date**: 2025-10-28 (CORRECTED - previous version had fabricated data)
+**Status**: Production ready (selected as Level 1, requires validation)
+
+**Summary**: EmbeddingGemma-300M semantic routing model (ENCODER-ONLY, not generative):
+- MTEB: 61.15 Multilingual v2, 69.67 English v2, 68.76 Code v1 (VERIFIED from Google Model Card)
+- Speed: <15ms on EdgeTPU (official), ❌ NO M2 Air benchmarks (needs validation)
+- Multilingual: 100+ languages (Hungarian, Vietnamese in training data)
+- Size: 622MB disk (BF16), <200MB RAM with quantization
+
+**Critical Gaps**:
+1. ❌ NO M2 Air speed benchmarks (target: <100ms P95)
+2. ❌ NO Hungarian/Vietnamese quality verification
+3. ❌ NO code-specific benchmarks per language (TS/Go/Python)
+4. ❌ Similarity threshold needs empirical tuning (0.75 arbitrary)
+
+**Key Correction**: nomic-embed-text is a DIFFERENT model (137M params, Nomic AI), NOT an alias for EmbeddingGemma (308M params, Google)
+
+**Recommendation**: Keep as Level 1 (best multilingual MTEB under 500M), validate M2 Air speed + threshold tuning
+
+**Validation Needed** (11 days total):
+1. M2 Air speed benchmark (target: <100ms P95) - HIGH PRIORITY
+2. Similarity threshold optimization (test 0.6-0.85) - HIGH PRIORITY
+3. Hungarian/Vietnamese embedding quality - MEDIUM PRIORITY
+4. Code embedding quality per language - MEDIUM PRIORITY
+**Date**: 2025-10-28
+**Status**: Analysis complete, optional specialist
+
+**Summary**: Gemma 3 4B multimodal generalist model:
+- Instruction Following: 90.2% IFEval (best in 4B class)
+- Code: 71.3% HumanEval, 63.2% MBPP (strong for generalist)
+- Multimodal: 75.8 DocVQA, 68.8 ChartQA (UNIQUE vision capability)
+- Math: 89.2% GSM8K, 75.6% MATH (competitive with 7B models)
+- Multilingual: 140+ languages (verified)
+
+**Critical Gap**: No SALAD-Bench/AttaQ safety scores, no BFCL function calling benchmarks, 15% lower code quality than Qwen2.5-Coder-3B
+
+**Recommendation**: Add as Level 2 Specialist (screenshot naming, markdown image analysis, multilingual) - can reuse from Cotypist app (zero marginal cost)
+
+**Validation Needed**:
+1. Screenshot filename generation quality (10 diverse tests)
+2. Speed benchmarks on M2 Air (target: >60 tok/s)
+3. Multilingual accuracy (Hungarian, Vietnamese)
+4. Memory usage (target: <1.5GB RAM)
+
+---
+
+### qwen3-4b-instruct.md
+**Date**: 2025-10-28
+**Status**: Analysis complete - OPTIONAL Level 2 Secondary
+
+**Summary**: Qwen3-4B-Instruct general-purpose model with strong reasoning:
+- Instruction Following: 87.0 IFEval (best in sub-5B class)
+- General Reasoning: 83.7 MMLU-Redux (Base model)
+- Multilingual: 119 languages (vs 92 code languages in Qwen2.5-Coder)
+- Training: 36T tokens general (NOT code-specialized)
+- Size: 2.5GB Q4_K_M (600MB larger than Qwen2.5-Coder-3B)
+
+**Critical Gap**: NO HumanEval/MBPP/LiveCodeBench scores (NOT code-specialized). Use for general tasks, NOT code linting.
+
+**Recommendation**: Add as OPTIONAL Level 2 Secondary (non-code tasks only). Route general tasks → Qwen3-4B, route code tasks → Qwen2.5-Coder-3B. Document when to use vs Qwen2.5-Coder-3B (different specializations).
+
+**Use Cases**:
+- ✅ File naming, organization (general analysis)
+- ✅ Multilingual content (Hungarian/Vietnamese)
+- ✅ Complex instruction-following (multi-step reasoning)
+- ❌ NOT for code linting (use Qwen2.5-Coder-3B)
+
+**Validation Needed**:
+1. Instruction-following on tinyArms tasks (file naming, 10 tests)
+2. Multilingual accuracy (Hungarian/Vietnamese, 20 files)
+3. Speed benchmarks on M2 Air (target: 70-90 tok/s)
+4. Code understanding test (20 files, expect 70% accuracy, NOT replacing code-specialized)
 
 ---
 

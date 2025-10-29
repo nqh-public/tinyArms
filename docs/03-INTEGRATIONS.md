@@ -1,6 +1,67 @@
 # 03 - Integrations
 
-**MacWhisper, jan-nano-4b, Claude Code, and other tool integrations**
+**MacWhisper, jan-nano-4b, Claude Code, MCP, LaunchAgent, and other tool integrations**
+
+---
+
+## Level 0 Rules Engine
+
+**Purpose**: Instant responses for pattern-matching tasks (<1ms)
+**Target**: Handle 60-75% of tasks here
+**Status**: ⚠️ Implementation needed
+
+### Examples
+
+**Filename formatting (kebab-case)**:
+```typescript
+function formatFilename(filename: string): string {
+  return filename
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+// "Screenshot 2024.png" → "screenshot-2024.png" (<1ms)
+```
+
+**Keyword extraction (RAKE algorithm)**:
+```typescript
+function extractKeywords(text: string): string[] {
+  const stopwords = ['the', 'a', 'an', 'in', 'on', 'at'];
+  const words = text.toLowerCase().split(/\s+/);
+  const filtered = words.filter(w => !stopwords.includes(w));
+  return filtered; // <1ms
+}
+```
+
+**File type detection**:
+```typescript
+function detectFileType(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase();
+  const typeMap = {
+    'tsx': 'react-component',
+    'ts': 'typescript',
+    'md': 'markdown',
+    'png': 'image',
+    'jpg': 'image'
+  };
+  return typeMap[ext] || 'unknown'; // <1ms
+}
+```
+
+### When to Use Rules
+
+**Good candidates**:
+- Pattern matching (kebab-case, camelCase transformations)
+- Lookup tables (file type → category)
+- Simple string operations (trim, replace, split)
+- Mathematical calculations (no AI needed)
+
+**Bad candidates**:
+- Semantic understanding ("Is this a hero section?")
+- Context-dependent decisions ("Does this violate DRY?")
+- Natural language processing
+
+**Full details**: See [01-ARCHITECTURE.md - Level 0 section](01-ARCHITECTURE.md#level-0-deterministic-rules)
 
 ---
 
@@ -145,7 +206,8 @@ skills:
 
 ## Claude Code MCP Integration
 
-**Purpose**: Claude Code calls tinyArms tools via MCP
+**Status**: ⚠️ 0% IMPLEMENTED (design validated against 10+ production MCP servers)
+**Purpose**: Claude Code/Aider/Cursor call tinyArms tools via MCP
 
 ### Setup
 
@@ -161,24 +223,50 @@ Add to `~/.config/claude-code/mcp.json`:
 }
 \`\`\`
 
-### Available Tools
+### Available Tools (AI Agents → tinyArms)
 
-- **lint_code**: Constitutional code review
-- **rename_file**: Intelligent file naming
-- **analyze_changes**: Markdown change detection
-- **extract_keywords**: Text processing
-- **query_system**: System state queries
-- **research_with_mcp**: Delegate to jan-nano-4b (if installed)
+**Naming Pattern**: `[action]_[noun]` (snake_case, verb-first)
+- ✅ Validated against GitHub MCP, Filesystem MCP, PostgreSQL MCP, Context7 MCP
+- ⚠️ All destructive operations support `dry_run` parameter
+
+**Tools**:
+- `rename_file` - Intelligent file naming ✅
+- `lint_code` - Constitutional code review (read-only analysis) ✅
+- `fix_lint_issues` - Apply constitutional fixes (with dry_run support) 🆕
+- `analyze_changes` - Markdown change detection ✅
+- `extract_keywords` - Text processing ✅
+- `get_system_status` - System state queries (renamed from query_system) 🔄
+- `run_precommit_checks` - Execute pre-commit hooks with autofix 🆕
 
 ### Usage Example
 
-\`\`\`
+\`\`\`typescript
+// Claude Code context
 User: "Lint all TypeScript files against our constitution"
 
 Claude Code:
 1. Calls lint_code tool for each .ts file
 2. Aggregates violations
-3. Shows user results with file:line references
+3. Shows user the results with file:line references
+\`\`\`
+
+### tinyArms → Other MCP Servers
+
+**Purpose**: Access external tools to enhance skills
+
+**Integrated MCP Servers**:
+- **GitHub MCP**: Fetch PR context during linting
+- **Context7 MCP**: Official library docs
+- **Filesystem MCP**: Read local project files
+- **Figma MCP**: Design specs (future)
+
+**Example**:
+\`\`\`
+Claude Code: "Lint this file"
+  ↓
+tinyArms (Qwen 7B) + GitHub MCP (fetch PR context)
+  ↓
+Returns: Constitutional violations with line refs
 \`\`\`
 
 ---
@@ -202,6 +290,126 @@ Add to `.cursor/mcp-servers.json`:
   }
 }
 \`\`\`
+
+---
+
+## LaunchAgent Automation
+
+**Status**: ⚠️ Design validated (research from production macOS apps)
+**Purpose**: macOS-native scheduling for skills
+
+### Features
+
+- **Time-based triggers**: Every 2 hours, every 5 mins
+- **File watching**: Instant triggers (via WatchPaths)
+- **Power-aware**: AC only for Level 3 (heavy tasks)
+- **Idle detection**: Don't interrupt work
+- **Auto-restart**: Only on crash (prevent loops)
+
+### Example LaunchAgent (Production-Validated)
+
+\`\`\`xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tinyarms.file-naming</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/tinyarms</string>
+    <string>run</string>
+    <string>file-naming</string>
+    <string>~/Downloads</string>
+  </array>
+
+  <!-- Scheduling -->
+  <key>StartInterval</key>
+  <integer>300</integer> <!-- 5 minutes -->
+
+  <key>RunAtLoad</key>
+  <true/> <!-- Run immediately on load -->
+
+  <!-- Resource Management (Apple Silicon optimization) -->
+  <key>ProcessType</key>
+  <string>Background</string> <!-- Use efficiency cores -->
+
+  <key>LowPriorityBackgroundIO</key>
+  <true/> <!-- Reduce I/O priority -->
+
+  <!-- Logging (CRITICAL for debugging) -->
+  <key>StandardOutPath</key>
+  <string>/Users/YOUR_USER/Library/Logs/tinyArms/stdout.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/YOUR_USER/Library/Logs/tinyArms/stderr.log</string>
+
+  <!-- Auto-restart (only on crash) -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <!-- Prevent restart loops -->
+  <key>ThrottleInterval</key>
+  <integer>60</integer> <!-- 60 seconds minimum between restarts -->
+</dict>
+</plist>
+\`\`\`
+
+### Idle Detection (in shell script, NOT LaunchAgent)
+
+\`\`\`bash
+# Get idle time in seconds
+IDLE_TIME=$(ioreg -c IOHIDSystem | awk '/HIDIdleTime/{print int($NF/1000000000);exit}')
+IDLE_THRESHOLD=300 # 5 minutes
+
+if [ "$IDLE_TIME" -lt "$IDLE_THRESHOLD" ]; then
+  echo "User active (idle: ${IDLE_TIME}s), skipping heavy tasks"
+  exit 0
+fi
+\`\`\`
+
+### Power-Aware Logic (in shell script)
+
+\`\`\`bash
+# Check if on AC power
+if ! pmset -g ps | grep -q "AC Power"; then
+  echo "On battery power, skipping heavy tasks"
+  exit 0
+fi
+
+# Use caffeinate to prevent sleep during processing
+caffeinate -i ./process-tasks.sh
+\`\`\`
+
+### Idle-Only Scheduling for Deep Scans
+
+\`\`\`yaml
+skills:
+  code-linting-deep:
+    model: qwen2.5-coder:7b
+    schedule:
+      type: idle_only
+      min_idle_minutes: 15        # Mac idle >15 min
+      require_ac_power: true       # Only when plugged in
+      min_free_memory_gb: 7        # Need 7GB free before loading
+      time_window: "22:00-06:00"   # Optional: 10pm-6am only
+\`\`\`
+
+### Key Findings
+
+- Production apps implement idle detection in code (IOHIDSystem API), not LaunchAgent
+- Power-aware logic uses `pmset -g ps` for AC power checks
+- Always include StandardOutPath/StandardErrorPath for debugging
+- ProcessType=Background uses efficiency cores on Apple Silicon
+- KeepAlive with Crashed=true only (prevents restart loops)
+
+**Sources**: Restic scheduler, Watchman, SleepWatcher, Carbon Copy Cloner, Apple LaunchAgent docs
+
+**Full details**: See [04-launchagent-ideations.md](04-launchagent-ideations.md)
 
 ---
 

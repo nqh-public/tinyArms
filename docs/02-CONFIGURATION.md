@@ -386,6 +386,48 @@ CREATE INDEX idx_cache_last_used ON cache_entries(last_used_at);
 
 ---
 
+## Storage Management
+
+**Status**: ⚠️ Schema design validated (research from Langfuse/Continue.dev patterns)
+**Purpose**: Persistent state management
+
+### SQLite Database Location
+
+**Path**: `~/.config/tinyarms/tinyarms.db`
+
+### Tables
+
+**Production-validated schema** (based on Langfuse and Continue.dev):
+- `task_history` - Execution records (with INTEGER timestamps)
+- `user_feedback` - Learning data
+- `performance_metrics` - Speed/accuracy tracking
+- `cache_entries` - Router cache with TTL
+- `statistics` - Analytics
+
+See [SQLite Database Schema section above](#sqlite-database-schema-production-validated) for complete SQL.
+
+### Configuration Access
+
+**YAML for humans** (`~/.config/tinyarms/config.yaml`):
+```yaml
+models:
+  level1: embeddinggemma:300m
+  level2-code: qwen2.5-coder:3b
+
+skills:
+  code-linting-fast:
+    enabled: true
+    model: level2-code
+```
+
+**JSON API for agents**:
+```bash
+# Query config programmatically
+tinyarms config show --json | jq '.skills["code-linting-fast"]'
+```
+
+---
+
 ## Next Steps
 
 1. **Test configuration**: `tinyarms config validate`

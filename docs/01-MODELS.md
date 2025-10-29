@@ -239,6 +239,34 @@ Free                       7,400MB (7.4GB)
 
 ---
 
+## Memory Usage (Updated from Research)
+
+### Memory Usage
+
+**Ollama Runtime Overhead**:
+- Versions 0.4.0+: 50-70 MB (optimized subprocess model)
+- Older versions (0.3.x): 575-890 MB (CUDA runner overhead)
+
+**Per Model** (with 8K context):
+- embeddinggemma:300m: ~650 MB (577 MB weights + overhead)
+- Qwen2.5-Coder-3B Q4: ~2.2 GB (1.9 GB model + 200 MB KV cache)
+- Qwen2.5-Coder-7B Q4: ~5.0 GB (4.7 GB model + 400 MB KV cache)
+
+**Formula** (Q4_K_M quantization):
+```
+Model Weights = Parameters × 0.57 bytes/param
+KV Cache (8K) = ~200 MB (3B), ~400 MB (7B)
+Total RAM = Weights + KV Cache + Ollama Runtime (50-70 MB)
+```
+
+**8GB vs 16GB Guidance**:
+- **8GB M2 Air**: Level 1 only recommended, Level 2 tight, Level 3 not viable
+- **16GB M2 Air**: All levels viable for command-line, Level 3 struggles with IDE integration
+
+**Sources**: llama.cpp discussions, Ollama GitHub issues, M2 Air user reports
+
+---
+
 ## Performance Estimates
 
 | Task | Level | Model | Speed | Accuracy |

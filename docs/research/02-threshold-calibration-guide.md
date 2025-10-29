@@ -44,7 +44,9 @@
 
 ---
 
-## Default Thresholds (Starting Values)
+## Default Thresholds (Research-Based Starting Values)
+
+**Status**: Updated from academic research (FrugalGPT, AutoMix, RouteLLM, Mixture of Thought)
 
 ### Level 0 → Level 1
 - **Trigger**: No exact match found
@@ -52,20 +54,27 @@
 
 ### Level 1 → Level 2
 - **Metric**: Embedding cosine similarity
-- **Threshold**: <0.90
-- **Reasoning**: Semantic match must be strong (>0.90) to avoid LLM invocation
+- **Threshold**: <0.82 (updated from 0.90 based on embedding research)
+- **Reasoning**: Embedding research shows 0.9 is near upper bound for dissimilar text. Practical systems use 0.8-0.85.
+- **Source**: Embedding similarity studies (0.7-0.85 range), practical LLM routing systems
 
 ### Level 2 → Level 3
 - **Metric**: Answer consistency (pairwise similarity of N=3 responses)
-- **Threshold**: <0.85
-- **Reasoning**: Validated by AutoMix research (semantic agreement threshold)
+- **Threshold**: <0.58 (updated from 0.85 based on Mixture of Thought research)
+- **Reasoning**: Mixture of Thought paper found 0.5-0.6 optimal for agreement scores. 0.85 is too strict (forces near-unanimous consensus).
+- **Source**: "Large Language Model Cascades with Mixture of Thought Representations" (arXiv:2310.03094)
 
 ### Level 3 → Human Review
 - **Metric**: Logit confidence OR manual escalation flag
 - **Threshold**: <0.50 (very uncertain) OR protected domain
 - **Reasoning**: Large model uncertainty is rare, indicates truly hard query
 
-**Reference**: research/02-orchestration-patterns.md:469-486
+**Important**: These are STARTING values. All papers emphasize thresholds are task-specific and should be tuned via:
+1. Validation set optimization (FrugalGPT approach)
+2. A/B testing (Week 5 calibration)
+3. Continuous optimization (Rational Tuning paper)
+
+**Reference**: research/02-confidence-scoring-patterns.md:469-486
 
 ---
 

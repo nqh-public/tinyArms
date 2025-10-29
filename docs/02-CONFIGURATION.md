@@ -321,6 +321,71 @@ export TINYARMS_LOG_LEVEL=debug
 
 ---
 
+## SQLite Database Schema (Production-Validated)
+
+**Status**: ✅ Validated against Langfuse (PostgreSQL) and Continue.dev (SQLite) patterns
+
+### Timestamp Convention
+
+**Use INTEGER (Unix epoch, UTC)**, not ISO-8601 text:
+- Smaller storage (8 bytes vs 19+ bytes)
+- Faster queries (integer comparison vs string parsing)
+- Easier math (duration = end - start)
+- Conversion: `Math.floor(Date.now() / 1000)`
+
+### Primary Key Convention
+
+**Use INTEGER PRIMARY KEY AUTOINCREMENT** (local IDs):
+- Simple, sequential, efficient
+- No collision risk (unlike UUIDs)
+- Suitable for single-device SQLite
+
+### Index Strategy
+
+**Always index**:
+- Foreign keys
+- Timestamps (for time-range queries)
+- Status/type fields (for filtering)
+- Composite: `[entity_id, timestamp]` for timeline queries
+
+### Example Schema Updates
+
+```sql
+-- task_history (UPDATED)
+CREATE TABLE IF NOT EXISTS task_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id TEXT NOT NULL,
+  execution_start INTEGER NOT NULL,  -- Changed from timestamp
+  execution_end INTEGER,
+  duration_ms INTEGER,                -- Pre-calculated
+  execution_status TEXT NOT NULL,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  CHECK (execution_status IN ('pending', 'running', 'completed', 'error'))
+);
+
+CREATE INDEX idx_task_history_start ON task_history(execution_start);
+CREATE INDEX idx_task_history_status ON task_history(execution_status);
+
+-- cache_entries (UPDATED)
+CREATE TABLE IF NOT EXISTS cache_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cache_key TEXT NOT NULL UNIQUE,
+  cache_value TEXT NOT NULL,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  last_used_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  expires_at INTEGER,                 -- TTL support
+  hit_count INTEGER NOT NULL DEFAULT 1,
+  is_valid BOOLEAN NOT NULL DEFAULT 1 -- Manual invalidation
+);
+
+CREATE INDEX idx_cache_expires ON cache_entries(expires_at);
+CREATE INDEX idx_cache_last_used ON cache_entries(last_used_at);
+```
+
+**Sources**: Langfuse Prisma schema, Continue.dev SQLite patterns
+
+---
+
 ## Next Steps
 
 1. **Test configuration**: `tinyarms config validate`

@@ -77,31 +77,9 @@ alias tinyarms-sync="cd /Users/huy/CODES/nqh && git subtree push --prefix=apps/t
 
 ---
 
-## Documentation Structure
+## Documentation
 
-**Phase 0 (Foundation)**:
-- `docs/00-OVERVIEW.md` - What, why, how it works
-- `docs/00-GETTING-STARTED.md` - Prerequisites, first run
-
-**Phase 1 (Core)**:
-- `docs/01-ARCHITECTURE.md` - Tiered routing, skills, MCP
-- `docs/01-MODELS.md` - All model decisions + benchmarks
-
-**Phase 2 (Setup)**:
-- `docs/02-INSTALLATION.md` - Install steps
-- `docs/02-CONFIGURATION.md` - Config examples
-- `docs/02-TROUBLESHOOTING.md` - Common issues
-
-**Phase 3 (Features)**:
-- `docs/03-SKILLS.md` - What each skill does
-- `docs/03-INTEGRATIONS.md` - MacWhisper, Claude Code, jan-nano-4b
-
-**Phase 4 (Design)**:
-- `docs/04-launchagent-ideations.md` - Automation strategies
-- `docs/04-mcp-server-ideations.md` - MCP integration design
-- `docs/04-swiftui-app-ideations.md` - GUI mockups
-
-**Archive**: `docs/archive/` - Old consolidated files (IMPLEMENTATION.md, MODEL-DECISIONS.md, etc.)
+**📚 Complete navigation**: See [docs/INDEX.md](docs/INDEX.md) (auto-generated from 40 files, organized by phase/category)
 
 ---
 

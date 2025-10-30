@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 41 files • 18,868 total lines
+**Auto-generated** • 42 files • 20,027 total lines
 
 ---
 

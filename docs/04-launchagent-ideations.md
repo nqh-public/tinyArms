@@ -114,157 +114,35 @@ Agent is loaded but never runs automatically. Only triggered manually or by othe
 
 ## TinyArms LaunchAgent Design
 
-### Agent 1: File Naming (Every 4 Hours + Watch)
+### Agent 1: File Naming (Hybrid: 4h schedule + file watch)
 
-**Strategy:** Hybrid - scheduled + file watching
+**Key Settings**:
+- `StartInterval`: 14400 (every 4 hours)
+- `WatchPaths`: ~/Downloads, ~/Desktop
+- `ThrottleInterval`: 10s (debounce bulk downloads)
+- `StartOnlyIfPowerSourceIsAC`: true (scheduled runs only, file watch works on battery)
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "...">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.tinyarms.file-naming</string>
-    
-    <!-- Run TinyArms CLI -->
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/tinyarms</string>
-        <string>run</string>
-        <string>file-naming</string>
-        <string>~/Downloads</string>
-        <string>~/Desktop</string>
-        <string>--json</string>
-    </array>
-    
-    <!-- Schedule: Every 4 hours -->
-    <key>StartInterval</key>
-    <integer>14400</integer>
-    
-    <!-- File watching: Instant trigger on new files -->
-    <key>WatchPaths</key>
-    <array>
-        <string>/Users/huy/Downloads</string>
-        <string>/Users/huy/Desktop</string>
-    </array>
-    
-    <!-- Debounce: Wait 10 seconds (avoid triggering during bulk downloads) -->
-    <key>ThrottleInterval</key>
-    <integer>10</integer>
-    
-    <!-- Power: Only when plugged in (for scheduled runs) -->
-    <key>StartOnlyIfPowerSourceIsAC</key>
-    <true/>
-    
-    <!-- Don't run immediately on load -->
-    <key>RunAtLoad</key>
-    <false/>
-    
-    <!-- Logging -->
-    <key>StandardOutPath</key>
-    <string>/Users/huy/.config/tinyarms/logs/file-naming.log</string>
-    
-    <key>StandardErrorPath</key>
-    <string>/Users/huy/.config/tinyarms/logs/file-naming.error.log</string>
-    
-    <!-- Environment -->
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>OLLAMA_HOST</key>
-        <string>http://localhost:11434</string>
-        <key>PATH</key>
-        <string>/usr/local/bin:/usr/bin:/bin</string>
-    </dict>
-    
-    <!-- Resource limits -->
-    <key>SoftResourceLimits</key>
-    <dict>
-        <key>NumberOfFiles</key>
-        <integer>1024</integer>
-    </dict>
-    
-    <!-- Auto-restart on crash -->
-    <key>KeepAlive</key>
-    <dict>
-        <key>SuccessfulExit</key>
-        <false/>
-    </dict>
-</dict>
-</plist>
-```
+**Full 73-line XML deleted** (lines 122-194). See core LaunchAgent pattern above.
 
-**Behavior:**
-- Runs every 4 hours (scheduled)
-- Also runs when files appear in Downloads/Desktop (instant)
-- Only scheduled runs require AC power
-- File watch triggers work on battery too (lightweight)
+---
 
-### Agent 2: Markdown Analysis (Every 2 Hours)
+### Agent 2: Markdown Analysis (Scheduled, power-aware)
 
-**Strategy:** Scheduled only, power-aware
+**Key Settings**:
+- `StartInterval`: 7200 (every 2 hours)
+- `StartOnlyIfPowerSourceIsAC`: true
+- `StartOnlyWhileIdle`: true + `IdleTime`: 120s
 
-```xml
-<dict>
-    <key>Label</key>
-    <string>com.tinyarms.markdown-analysis</string>
-    
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/tinyarms</string>
-        <string>run</string>
-        <string>markdown-analysis</string>
-        <string>~/CODES/nqh/.specify/memory/</string>
-        <string>--json</string>
-    </array>
-    
-    <!-- Every 2 hours -->
-    <key>StartInterval</key>
-    <integer>7200</integer>
-    
-    <!-- Only when plugged in -->
-    <key>StartOnlyIfPowerSourceIsAC</key>
-    <true/>
-    
-    <!-- Only when idle for 2 minutes (don't interrupt work) -->
-    <key>StartOnlyWhileIdle</key>
-    <true/>
-    <key>IdleTime</key>
-    <integer>120</integer>
-    
-    <key>StandardOutPath</key>
-    <string>/Users/huy/.config/tinyarms/logs/markdown-analysis.log</string>
-    
-    <key>StandardErrorPath</key>
-    <string>/Users/huy/.config/tinyarms/logs/markdown-analysis.error.log</string>
-</dict>
-```
+**Unique keys only** (reference Agent 1 for common keys like `ProgramArguments`, `StandardOutPath`)
 
-**Behavior:**
-- Runs every 2 hours
-- Only when plugged in + idle for 2 minutes
-- Won't interrupt active work
+---
 
-### Agent 3: Code Linting (On-Demand Only)
+### Agent 3: Code Linting (On-Demand)
 
-**Strategy:** No schedule, triggered by MCP/CLI only
-
-```xml
-<dict>
-    <key>Label</key>
-    <string>com.tinyarms.code-linting</string>
-    
-    <!-- This agent doesn't auto-run -->
-    <key>RunAtLoad</key>
-    <false/>
-    
-    <!-- No StartInterval, no WatchPaths -->
-    
-    <!-- But can be triggered via: -->
-    <!-- launchctl kickstart gui/$UID/com.tinyarms.code-linting -->
-</dict>
-```
-
-**Note:** This agent is just for consistency. Linting is primarily CLI/MCP driven.
+**Key Settings**:
+- `RunAtLoad`: false
+- No `StartInterval`, no `WatchPaths`
+- Trigger: `launchctl kickstart gui/$UID/com.tinyarms.code-linting`
 
 ---
 
@@ -366,73 +244,11 @@ launchctl print gui/$UID/com.tinyarms.file-naming
 
 ---
 
-## Advanced Patterns
+## Advanced Patterns (Deleted - See Apple Docs)
 
-### Pattern 6: Network Monitoring
+**Patterns 6-8 removed** (Network monitoring, Calendar integration, Resource-aware execution)
 
-Run when connected to specific WiFi networks.
-
-```xml
-<!-- Run only on home WiFi (avoid on public networks) -->
-<key>StartOnlyIfUserIsLoggedIn</key>
-<true/>
-
-<!-- Note: NetworkState requires additional setup -->
-<!-- Usually combined with script that checks WiFi SSID -->
-```
-
-### Pattern 7: Calendar Integration
-
-Run at specific times on specific days.
-
-```xml
-<!-- Run Monday-Friday at 9 AM -->
-<key>StartCalendarInterval</key>
-<array>
-    <dict>
-        <key>Weekday</key>
-        <integer>1</integer> <!-- Monday -->
-        <key>Hour</key>
-        <integer>9</integer>
-    </dict>
-    <dict>
-        <key>Weekday</key>
-        <integer>2</integer> <!-- Tuesday -->
-        <key>Hour</key>
-        <integer>9</integer>
-    </dict>
-    <!-- ... through Friday -->
-</array>
-```
-
-**Use for:** Work-hours-only tasks
-
-### Pattern 8: Resource-Aware Execution
-
-Don't run if memory is low.
-
-```xml
-<!-- This is enforced by TinyArms CLI checking memory before execution -->
-<key>ProgramArguments</key>
-<array>
-    <string>/usr/local/bin/tinyarms</string>
-    <string>run</string>
-    <string>file-naming</string>
-    <string>--check-memory</string> <!-- CLI flag -->
-</array>
-```
-
-Then in CLI:
-
-```typescript
-if (options.checkMemory) {
-    const freeMemory = os.freemem() / 1024 / 1024 / 1024; // GB
-    if (freeMemory < 4) {
-        console.log('Skipping: Low memory (< 4GB free)');
-        process.exit(0); // Exit cleanly, no error
-    }
-}
-```
+**Note**: These are generic LaunchAgent features, not tinyArms-specific. See Apple's LaunchAgent documentation for full reference.
 
 ---
 
@@ -481,87 +297,15 @@ Total: ~0.5% battery/day (best for battery)
 
 ---
 
-## Error Handling
+## Error Handling (tinyArms-Specific)
 
-### Scenario 1: Ollama Not Running
+**Keep only tinyArms-specific error cases** (Ollama down, model missing, disk full):
 
-LaunchAgent runs, CLI fails because Ollama is down.
+1. **Ollama not running**: CLI checks status → exit(1) → LaunchAgent retries (KeepAlive + ThrottleInterval 60s)
+2. **Model unavailable**: CLI sends notification → exit(0) clean (no retry loop)
+3. **Disk full**: Log rotation via separate agent (delete logs >7 days old)
 
-**Solution:**
-
-```xml
-<!-- Auto-restart on failure -->
-<key>KeepAlive</key>
-<dict>
-    <key>SuccessfulExit</key>
-    <false/> <!-- Don't restart on successful exit -->
-    <key>Crashed</key>
-    <true/>  <!-- Restart on crash -->
-</dict>
-
-<!-- Throttle restarts to avoid thrashing -->
-<key>ThrottleInterval</key>
-<integer>60</integer> <!-- Wait 1 minute between restarts -->
-```
-
-Plus in CLI:
-
-```typescript
-// Check Ollama before running
-if (!(await checkOllamaStatus())) {
-    console.error('Ollama not running. Start Ollama first.');
-    process.exit(1); // Exit with error (triggers retry if configured)
-}
-```
-
-### Scenario 2: Model Not Downloaded
-
-LaunchAgent runs, but model isn't available.
-
-**Solution:**
-
-```bash
-# In CLI, auto-download missing models
-if model_not_found:
-    tinyarms models pull gemma3:4b
-```
-
-Or better:
-
-```typescript
-// Gracefully skip if model unavailable
-if (!(await checkModelAvailability(model))) {
-    console.warn(`Model ${model} not available. Skipping task.`);
-    sendNotification({
-        title: 'TinyArms',
-        message: `${skill} skipped: ${model} not installed`,
-        actions: ['Install Model', 'Dismiss']
-    });
-    process.exit(0); // Clean exit
-}
-```
-
-### Scenario 3: Disk Full
-
-Can't write logs or cache.
-
-**Solution:**
-
-```xml
-<!-- Limit log file size -->
-<key>StandardOutPath</key>
-<string>/Users/huy/.config/tinyarms/logs/file-naming.log</string>
-
-<!-- Rotate logs weekly via separate LaunchAgent -->
-```
-
-Plus logrotate-like cleanup:
-
-```bash
-# com.tinyarms.log-cleanup.plist
-# Runs daily, cleans logs older than 7 days
-find ~/.config/tinyarms/logs -name "*.log" -mtime +7 -delete
-```
+**Generic LaunchAgent patterns removed** (reference Apple documentation instead)
 
 ---
 
@@ -712,42 +456,14 @@ Logs may contain sensitive info (file paths, content snippets).
 
 ---
 
-## Future Ideas
+## Future Ideas (Moved to ROADMAP.md)
 
-### Idea 1: Adaptive Scheduling
+**3 ideas removed**:
+1. Adaptive scheduling (learn user active hours)
+2. Contextual triggers (macOS Focus API integration)
+3. Dependency chains (one agent triggers another)
 
-Learn user's active hours, schedule tasks during inactive times.
-
-```typescript
-// Analyze past activity
-const activeHours = analyzeUserActivity();
-// activeHours = [9, 10, 11, 14, 15, 16, 17, 18]
-
-// Schedule tasks during inactive hours (e.g., 13:00, 19:00)
-const optimalTimes = findInactiveHours(activeHours);
-generatePlist(optimalTimes);
-```
-
-### Idea 2: Contextual Triggers
-
-Run tasks based on user context.
-
-```xml
-<!-- Run file-naming when in "Focus" mode (no distractions) -->
-<!-- Requires integration with macOS Focus API -->
-```
-
-### Idea 3: Dependency Chains
-
-One agent triggers another.
-
-```xml
-<!-- After file-naming completes, run backup -->
-<key>StartAfter</key>
-<array>
-    <string>com.tinyarms.file-naming</string>
-</array>
-```
+**Note**: See ROADMAP.md (future) for these Phase 2+ enhancements
 
 ---
 

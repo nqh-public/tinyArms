@@ -31,71 +31,21 @@ Ollama (local inference)
 
 ## CLI Interface
 
-### Basic Usage
+### CLI Examples (3 common patterns)
 
 ```bash
-# Direct model inference (no routing)
-tinyarms model run <model-name> "<prompt>" [options]
+# 1. Direct inference (no routing)
+tinyarms model run qwen2.5-coder:3b "Review for magic numbers"
 
-# Examples
-tinyarms model run qwen2.5-coder:3b "Review this code for magic numbers"
-tinyarms model run jan-nano-4b "Find TanStack Start deployment docs" --mcp github,context7
-tinyarms model run embeddinggemma:300m "Classify this file type: hero-mockup.png" --embedding-only
-```
+# 2. Research with MCP tools (jan-nano only)
+tinyarms model run jan-nano-4b "Find Prisma guide" --mcp context7,github
 
-### Advanced Options
-
-```bash
-# With system prompt
-tinyarms model run jan-nano-4b \
-  --system "You are a research assistant" \
-  --prompt "Find React 19 best practices" \
-  --mcp context7,web-search
-
-# Stream output
-tinyarms model run qwen2.5-coder:3b \
-  --prompt "Analyze this file" \
-  --stdin < src/main.ts \
-  --stream
-
-# JSON mode (for agents)
-tinyarms model run jan-nano-4b \
-  --prompt "Search for Prisma migrations guide" \
-  --mcp context7,github \
-  --json
-
-# With file context
-tinyarms model run qwen2.5-coder:3b \
-  --prompt "Review against constitution" \
-  --files src/components/button.tsx \
-  --context .specify/memory/constitution.md
-```
-
-### Model Discovery
-
-```bash
-# List available models
+# 3. List/info commands
 tinyarms model list
-
-# Output:
-# Level 1: embeddinggemma:300m (200MB, loaded)
-# Level 2: qwen2.5-coder:3b (1.9GB, loaded)
-# Level 2: jan-nano-4b:q8_0 (4.3GB, unloaded)
-# Level 2: gemma3-4b (2.3GB, unloaded)
-# Level 3: qwen2.5-coder:7b (4.7GB, unloaded)
-
-# Model info
 tinyarms model info jan-nano-4b
-
-# Output:
-# Name: jan-nano-4b
-# Level: 2/3 (research agent)
-# Size: 4.3GB (Q8 quantization)
-# Context: 128K tokens
-# MCP-capable: Yes
-# Available MCP servers: github, context7, filesystem, web-search
-# Use cases: Library docs, error diagnosis, pattern search
 ```
+
+**Full 65-line bash examples deleted** (lines 34-98). See Git history for all options (--stream, --json, --files, etc.)
 
 ---
 
@@ -282,154 +232,30 @@ model_load({
 
 ---
 
-## MCP Configuration (Claude Code)
+## MCP Configuration
 
-Add to `~/.config/claude-code/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "tinyarms": {
-      "command": "tinyarms",
-      "args": ["mcp-server"],
-      "description": "Direct access to local AI models"
-    }
-  }
-}
-```
+**See**: `04-mcp-server-ideations.md` for full MCP setup (Claude Code, Aider, Cursor)
 
 ---
 
-## Use Cases
+## Use Cases (4 examples)
 
-### Use Case 1: Context-Efficient Research
+| Use Case | Problem | Solution | Impact |
+|----------|---------|----------|--------|
+| **Context-efficient research** | Claude Code 200K context fills fast | jan-nano-4b + MCP gathers docs | Save 180K tokens |
+| **Pre-linting scans** | Linting 50 files expensive | Qwen 3B batch scan | Save 245K tokens |
+| **Semantic file search** | Finding similar code slow | embeddinggemma similarity | 60x faster |
+| **Constitutional lookup** | Checking principles loads full doc | embeddinggemma + jan-nano | Save full constitution load |
 
-**Problem**: Claude Code's 200K context fills up quickly when gathering docs
-
-**Solution**: Delegate research to jan-nano-4b
-
-```
-User: "Find TanStack Start deployment options on Railway vs Vercel"
-
-Claude Code:
-1. Calls model_infer with jan-nano-4b + context7 MCP
-2. jan-nano gathers docs, synthesizes findings
-3. Returns 2-page summary (vs 50 pages of raw docs)
-
-Context saved: 180K tokens
-```
+**Full 76-line use case descriptions deleted** (lines 241-316). See table for summary.
 
 ---
 
-### Use Case 2: Pre-Linting Scans
+## Implementation Phases (Note: See ROADMAP.md Future)
 
-**Problem**: Linting 50 files with Claude Code is expensive
+**4 phases removed** (Phase 1-4 detailed implementation plans)
 
-**Solution**: Use Qwen 3B for batch pre-scan
-
-```
-User: "Lint all TypeScript files for constitutional violations"
-
-Claude Code:
-1. Calls model_infer with qwen2.5-coder:3b for each file
-2. Aggregates violations
-3. Only escalates ambiguous cases to Claude Code
-
-Cost saved: 49 files × 5K tokens = 245K tokens
-```
-
----
-
-### Use Case 3: Semantic File Search
-
-**Problem**: Finding similar code patterns across monorepo
-
-**Solution**: Use embeddinggemma for fast similarity search
-
-```
-User: "Find files similar to this authentication logic"
-
-Claude Code:
-1. Calls model_embed on target code
-2. Compares against cached embeddings of all repo files
-3. Returns top 5 matches (<100ms vs minutes of grep)
-
-Speed: 60x faster than sequential code reading
-```
-
----
-
-### Use Case 4: Constitutional Principle Lookup
-
-**Problem**: Need to check if code violates specific principles
-
-**Solution**: Use embeddinggemma + jan-nano-4b
-
-```
-User: "Does this code violate our DRY principle?"
-
-Claude Code:
-1. Embeds code snippet (embeddinggemma, <100ms)
-2. Finds similar principles in constitution.md
-3. jan-nano-4b reads relevant principles + analyzes code
-4. Returns verdict with line references
-
-Context saved: Didn't load entire 1141-line constitution into Claude Code
-```
-
----
-
-## Implementation Strategy
-
-### Phase 1: Basic CLI
-
-```bash
-# Minimal implementation
-tinyarms model run <model> "<prompt>"
-tinyarms model list
-```
-
-**Deliverable**: Working CLI with 3 models (embeddinggemma, qwen-3b, jan-nano)
-
----
-
-### Phase 2: MCP Server
-
-```typescript
-// Implement 5 tools
-- model_infer
-- model_embed
-- model_list
-- model_load
-- model_unload
-```
-
-**Deliverable**: Claude Code can call tinyArms models via MCP
-
----
-
-### Phase 3: MCP Integration (jan-nano only)
-
-```yaml
-# Enable jan-nano to call other MCPs
-jan-nano-4b:
-  mcp_servers:
-    - context7
-    - github
-    - filesystem
-    - web-search
-```
-
-**Deliverable**: jan-nano-4b research agent with MCP tools
-
----
-
-### Phase 4: Optimization
-
-- Model caching (keepalive strategies)
-- Batch inference (process multiple files in parallel)
-- Result caching (dedupe identical queries)
-- Streaming responses (show progress for long operations)
+**Note**: Direct model access is future work. See ROADMAP.md for phased rollout strategy.
 
 ---
 
@@ -501,41 +327,11 @@ if (file_path.includes('..')) {
 
 ---
 
-## Testing Strategy
+## Testing Strategy (Summary)
 
-### Unit Tests
+**3 levels**: Unit (CLI commands), Integration (MCP tools), E2E (Claude Code workflow)
 
-```bash
-# Test CLI commands
-tinyarms model run embeddinggemma:300m "test" --json
-tinyarms model list
-tinyarms model info jan-nano-4b
-```
-
-### Integration Tests
-
-```typescript
-// Test MCP tools
-describe('MCP Tool: model_infer', () => {
-  it('should call jan-nano-4b with MCP servers', async () => {
-    const result = await callTool('model_infer', {
-      model: 'jan-nano-4b:q8_0',
-      prompt: 'Find Prisma docs',
-      mcp_servers: ['context7']
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.mcp_calls.length).toBeGreaterThan(0);
-  });
-});
-```
-
-### End-to-End Tests
-
-```bash
-# Simulate Claude Code workflow
-echo '{"method": "tools/call", "params": {...}}' | tinyarms mcp-server
-```
+**Full 38-line testing examples deleted**. See standard testing patterns for MCP servers.
 
 ---
 

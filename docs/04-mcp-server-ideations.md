@@ -15,169 +15,19 @@ MCP (Model Context Protocol) server that exposes TinyArms capabilities as tools 
 
 ---
 
-## Tool Design
+## Available Tools
 
-### Tool 1: `rename_file`
+**5 MCP tools exposed** to Claude Code/Aider/Cursor:
 
-**Purpose:** Intelligently rename files based on content/context
+| Tool | Purpose | Key I/O |
+|------|---------|---------|
+| `rename_file` | Intelligent file renaming | Input: file_path, context<br>Output: new_name, confidence, level |
+| `lint_code` | Constitutional code review | Input: file_path, constitution_path<br>Output: issues[], compliance |
+| `analyze_changes` | Markdown change detection | Input: directory, since<br>Output: changes[], suggestions[] |
+| `extract_keywords` | Intent from messy text | Input: text, context<br>Output: keywords[], action |
+| `query_system` | Query TinyArms state | Input: query (natural language)<br>Output: results[], summary |
 
-**Input Schema:**
-```typescript
-{
-  file_path: string;          // Path to file
-  context?: string;           // Optional context (e.g., "mobile mockup")
-  destination?: string;       // Optional destination directory
-  dry_run?: boolean;          // Preview without applying
-}
-```
-
-**Output:**
-```typescript
-{
-  success: boolean;
-  original_name: string;
-  new_name: string;
-  destination: string;
-  confidence: number;
-  level: string;              // Which routing level was used
-}
-```
-
-**Use Cases:**
-- Claude Code: "Rename all screenshots in Downloads with better names"
-- Aider: "Organize these Figma files properly"
-- Manual: Agent asks user for context, then renames intelligently
-
----
-
-### Tool 2: `lint_code`
-
-**Purpose:** Constitutional code review against user-defined principles
-
-**Input Schema:**
-```typescript
-{
-  file_path: string;
-  constitution_path?: string; // Path to constitution.md
-  rules?: string[];           // Specific rules to check
-  fix?: boolean;              // Auto-fix issues (dangerous!)
-}
-```
-
-**Output:**
-```typescript
-{
-  success: boolean;
-  issues: Array<{
-    line: number;
-    severity: 'error' | 'warning' | 'info';
-    category: 'constitutional' | 'quality' | 'bug' | 'security';
-    message: string;
-    suggestion: string;
-  }>;
-  summary: string;
-  compliance: number;         // 0-1 score
-  confidence: number;
-}
-```
-
-**Use Cases:**
-- Claude Code: "Review this file against our coding principles"
-- Pre-commit hook: Automatic linting before commits
-- CI/CD integration: Enforce principles in pipeline
-
----
-
-### Tool 3: `analyze_changes`
-
-**Purpose:** Detect and summarize changes in markdown/docs
-
-**Input Schema:**
-```typescript
-{
-  directory: string;
-  since?: string;             // e.g., "24h", "1w", "2024-10-20"
-  file_pattern?: string;      // e.g., "*.md", "constitution.md"
-}
-```
-
-**Output:**
-```typescript
-{
-  success: boolean;
-  changes: Array<{
-    file: string;
-    additions: string[];
-    deletions: string[];
-    summary: string;
-  }>;
-  suggestions: string[];      // What to do about these changes
-  confidence: number;
-}
-```
-
-**Use Cases:**
-- Claude Code: "What changed in our .specify/memory/ docs?"
-- Daily standup: "Summarize documentation changes from yesterday"
-- Knowledge sync: "What principles were added this week?"
-
----
-
-### Tool 4: `extract_keywords`
-
-**Purpose:** Extract keywords/intent from messy text (voice, drafts)
-
-**Input Schema:**
-```typescript
-{
-  text: string;
-  context?: 'voice' | 'draft' | 'note';
-  max_keywords?: number;      // Default: 5
-}
-```
-
-**Output:**
-```typescript
-{
-  keywords: string[];
-  intent?: string;            // Inferred intent
-  action?: string;            // Suggested action
-  confidence: number;
-}
-```
-
-**Use Cases:**
-- Voice transcription processing
-- Quick note cleanup
-- Action item extraction from meetings
-
----
-
-### Tool 5: `query_system`
-
-**Purpose:** Query TinyArms state and history
-
-**Input Schema:**
-```typescript
-{
-  query: string;              // Natural language query
-  limit?: number;             // Max results
-}
-```
-
-**Examples:**
-- "What files did I rename today?"
-- "Show me recent linting errors"
-- "What's using the most memory?"
-
-**Output:**
-```typescript
-{
-  results: any[];
-  summary: string;
-  confidence: number;
-}
-```
+**Full schemas**: See lines 20-180 (deleted - detailed TypeScript definitions)
 
 ---
 
@@ -212,83 +62,22 @@ MCP (Model Context Protocol) server that exposes TinyArms capabilities as tools 
 
 ---
 
-## Implementation Sketch
+## Implementation Overview
 
+**TypeScript + MCP SDK** (15-line sketch):
 ```typescript
-// src/mcp/server.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { TieredRouter } from '../router/tiered-router';
+// 1. Initialize MCP Server (name: 'tinyarms', version: '0.1.0')
+// 2. Register 5 tools (rename_file, lint_code, analyze_changes, extract_keywords, query_system)
+// 3. Route tool calls → TieredRouter
+// 4. Format output for agent consumption
+// 5. Start stdio transport
 
-export async function startMCPServer(config: Config) {
-  const server = new Server({
-    name: 'tinyarms',
-    version: '0.1.0',
-  }, {
-    capabilities: { tools: {} },
-  });
-
-  const router = new TieredRouter(config);
-
-  // Register tools
-  server.setRequestHandler('tools/list', async () => ({
-    tools: [
-      {
-        name: 'rename_file',
-        description: 'Intelligently rename files using local AI',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            file_path: { type: 'string' },
-            context: { type: 'string' },
-            dry_run: { type: 'boolean', default: false },
-          },
-          required: ['file_path'],
-        },
-      },
-      {
-        name: 'lint_code',
-        description: 'Review code against constitutional principles',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            file_path: { type: 'string' },
-            constitution_path: { type: 'string' },
-            rules: { type: 'array', items: { type: 'string' } },
-          },
-          required: ['file_path'],
-        },
-      },
-      // ... more tools
-    ],
-  }));
-
-  // Handle tool calls
-  server.setRequestHandler('tools/call', async (request) => {
-    const { name, arguments: args } = request.params;
-
-    switch (name) {
-      case 'rename_file':
-        return await handleRenameFile(args, router);
-      case 'lint_code':
-        return await handleLintCode(args, router);
-      // ... more handlers
-    }
-  });
-
-  // Start server
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  
-  console.log('🦖 TinyArms MCP server running');
-}
+// See 04-mcp-server-ideations.md:217-286 (deleted) for full TypeScript example
 ```
 
 ---
 
-## Agent Integration Examples
-
-### Claude Code Config
+## Agent Integration Example (Claude Code Only)
 
 ```json
 // ~/.config/claude-code/mcp.json
@@ -296,35 +85,11 @@ export async function startMCPServer(config: Config) {
   "mcpServers": {
     "tinyarms": {
       "command": "node",
-      "args": [
-        "/usr/local/bin/tinyarms",
-        "mcp-server"
-      ],
-      "env": {
-        "TINYARMS_CONFIG": "~/.config/tinyarms/config.yaml"
-      }
+      "args": ["/usr/local/bin/tinyarms", "mcp-server"],
+      "env": {"TINYARMS_CONFIG": "~/.config/tinyarms/config.yaml"}
     }
   }
 }
-```
-
-### Cursor Integration
-
-```json
-// .cursor/mcp-servers.json
-{
-  "tinyarms": {
-    "command": "tinyarms mcp-server",
-    "description": "Local AI assistant for file naming, code linting, etc."
-  }
-}
-```
-
-### Aider Integration
-
-```bash
-# Aider can call MCP servers directly
-aider --mcp tinyarms
 ```
 
 ---

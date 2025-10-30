@@ -10,15 +10,39 @@ Super lightweight. Designed to be invisible. Learns from your preferences. Grows
 
 ---
 
-## ⚠️ Status: Research Project (0% Implemented)
+## ⚠️ Status: Early Development (~15% Implemented)
 
-This is a **research project**. Architecture is complete, implementation has not started. Everything documented here is design, pseudo code, and research findings—not working software.
+**What works**: Core infrastructure (constitution loading, Ollama client, CLI framework, SQLite logging).
 
-**Why share now?** The architecture is proven through 6 research vectors (PromptBreeder, Thompson Sampling, ADWIN drift detection, etc.). Plus I promised myself I would upload something that I work on finally 🥹
+**What doesn't**: Tiered routing, file naming, markdown analysis, audio actions, prompt evolution system.
 
-**Timeline**: Architecture complete (2025-10-27). Implementation imminent.
+Most documentation describes the **architecture design**, not working features. See "What Works Now" below for actual implementation status.
+
+**Timeline**: Architecture complete (2025-10-27). Core linting infrastructure implemented (2025-10-30). Full feature set in progress.
 
 ⭐ **Star this repo** to follow development.
+
+---
+
+## ✅ What Works Now (v0.1.0)
+
+**Implemented** (Week 1-2, 2025-10-30):
+- ✅ Constitution loading from `.specify/memory/constitution.md`
+- ✅ Ollama model validation (`qwen2.5-coder:3b` availability check)
+- ✅ SQLite logging/metrics database
+- ✅ CLI framework (`tinyarms lint [file]`)
+- ⚠️ Code linting (infrastructure ready, rule detection needs fixing)
+
+**Tests**: 7/10 passing (constitution loader, model checker, Ollama client work)
+
+**Not Implemented** (design only):
+- ❌ Tiered routing (Level 0-3 system)
+- ❌ File naming skill
+- ❌ Markdown analysis skill
+- ❌ Audio actions skill
+- ❌ Prompt evolution (PromptBreeder + Thompson Sampling)
+- ❌ MCP server integration
+- ❌ LaunchAgent automation
 
 ---
 

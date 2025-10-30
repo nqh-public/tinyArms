@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 40 files • 17,953 total lines
+**Auto-generated** • 41 files • 18,868 total lines
 
 ---
 
@@ -84,7 +84,7 @@ Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Bette
 
 ---
 
-## Research (9 files)
+## Research (10 files)
 
 - **[Magic Numbers Audit - tinyArms Architecture](research/00-constants-audit.md)** - **Purpose**: Document source of all numeric constants in architecture design **Date**: 2025-10-27 **Status**: Design phase (0% implemented)
 - **[Industry Validation - tinyArms Architecture](research/01-industry-validation.md)** - **Status**: Researched (2025-10-29) **Sources**: 25+ academic papers, 8 open-source projects, 6 production case studies **Phase**: 01 (Current Stat...
@@ -95,6 +95,7 @@ Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Bette
 - **[Threshold Calibration Guide](research/02-threshold-calibration-guide.md)** - **Status**: Researched (2025-10-29) **Phase**: 02 (Confidence Scoring + Threshold Tuning) **Implementation**: Week 3-5 **Purpose**: Operational gui...
 - **[Real-World Multilayer AI Implementations](research/03-real-world-implementations.md)** - **Research Date**: 2025-10-29 **Sources**: GitHub repositories, academic papers, company blogs, production case studies
 - **[Semantic Caching Design](research/03-semantic-caching-design.md)** - **Status**: Researched (2025-10-29) **Phase**: 03 (Semantic Caching Implementation) **Implementation**: Week 4 **Expected Impact**: 15-25% query el...
+- **[Plugin Architecture Patterns Research](research/04-plugin-architecture-patterns.md)** - **Research Date**: 2025-10-30 **Status**: Researched - Ready for Architecture Integration **Phase**: 02 (Architecture Planning for Skills System) *...
 
 ---
 

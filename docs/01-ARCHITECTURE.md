@@ -199,82 +199,21 @@ Human & AI Agent Interfaces
 
 ## Industry Validation
 
-**Verdict**: tinyArms architecture is **90% aligned** with industry best practices
-**Research sources**: 25+ academic papers, 8 open-source projects, 6 production case studies
-**Date**: 2025-10-29
+**90% aligned** with industry best practices (FrugalGPT, RouteLLM, GitHub Copilot).
 
-### What's Validated ✅
+**See research/01-industry-validation.md for complete analysis** (25+ papers, 8 projects, 6 case studies)
 
-**Four-Tier Cascade**:
-- FrugalGPT (Stanford) uses 4 tiers, achieves 98% cost reduction
-- Justified (most systems use 2-3, but 4 is valid if L0 hit rate >30%)
+## Skills (Quick Reference)
 
-**Code-Specialized Models**:
-- GitHub Copilot, Continue.dev, Cursor all use code-specific models
-- +15-20% accuracy vs general models at same parameter count
+| Skill | Model | Speed | Use Case | Details |
+|-------|-------|-------|----------|---------|
+| code-linting-fast | Qwen2.5-Coder-3B | 2-3s | Pre-commit hooks | 03-SKILLS.md:7-28 |
+| code-linting-deep | Qwen2.5-Coder 7B | 10-15s | Weekly scans | 03-SKILLS.md:30-63 |
+| file-naming | Gemma 3 4B | 2-4s | Batch rename | 03-SKILLS.md:65-95 |
+| markdown-analysis | Gemma 3 4B | 2-4s | Track .specify/ | 03-SKILLS.md:97-121 |
+| audio-actions | Gemma 3 4B | 3-5s | Voice → actions | 03-SKILLS.md:123-146 |
 
-**Embedding Model**:
-- embeddinggemma-300m: Best multilingual model <500M params (MTEB ~70)
-- Used in production: Semantic Router (2.9k stars), Red Hat LLM-d
-
-**Quantization Strategy**:
-- Q4 standard for consumer hardware (Ollama, llama.cpp)
-- Expected loss: 2-5% accuracy degradation (acceptable)
-
-### Critical Gaps (To Implement) ⚠️
-
-- **Semantic Caching** (Phase 03): 15-25% query elimination
-- **Confidence Scoring** (Phase 02): 20-30% reduction in L3 escalations
-- **Cross-Encoder Reranker** (Phase 04, optional): +10-15% retrieval precision
-
-### Comparison to Production Systems
-
-| System | Similarity | Key Difference |
-|--------|------------|----------------|
-| **FrugalGPT** (Stanford) | 95% | tinyArms uses rules/embedding instead of cache (complementary) |
-| **RouteLLM** (LMSYS) | 70% | tinyArms adds pre-LLM filtering (rules, embedding) |
-| **Semantic Router** (Aurelio Labs) | 60% | tinyArms adds LLM fallback (Level 2, 3) |
-| **GitHub Copilot** | 85% | tinyArms adds tiered routing (cost optimization) |
-
-**Full details**: See [research/01-industry-validation.md](research/01-industry-validation.md)
-
-## Skills
-
-**Status**: ⚠️ ALL SKILLS 0% IMPLEMENTED (design only)
-
-Brief overview of available skills. For detailed configuration and usage, see [03-SKILLS.md](03-SKILLS.md).
-
-### code-linting-fast
-- **Model**: Qwen2.5-Coder-3B-Instruct (Level 2)
-- **Speed**: 2-3s per file
-- **Use case**: Pre-commit hooks, constitutional enforcement
-- **Detects**: Hardcoded colors, magic numbers, file size violations, missing line references
-
-### code-linting-deep
-- **Model**: Qwen2.5-Coder 7B (Level 3, optional)
-- **Speed**: 10-15s per file
-- **Use case**: Weekly deep scans (idle-only)
-- **Detects**: Architectural anti-patterns, complex DRY violations, cross-file analysis
-
-### file-naming
-- **Model**: Gemma 3 4B (Level 2, optional)
-- **Speed**: 2-4s per file
-- **Use case**: Batch rename screenshots/downloads
-- **Example**: `Screenshot 2024.png` → `hero-mockup-mobile.png`
-
-### markdown-analysis
-- **Model**: Gemma 3 4B (Level 2, optional)
-- **Speed**: 2-4s per file
-- **Use case**: Track changes in `.specify/memory/`
-- **Detects**: Constitutional changes, conflicting decisions
-
-### audio-actions
-- **Model**: Gemma 3 4B (Level 2, optional)
-- **Speed**: 3-5s per transcription
-- **Use case**: Convert MacWhisper transcriptions to structured actions
-- **Important**: SUGGEST ACTIONS (not summary)
-
-**Full details**: See [03-SKILLS.md](03-SKILLS.md) and [03-INTEGRATIONS.md](03-INTEGRATIONS.md)
+**See 03-SKILLS.md for detailed skill configuration**
 
 ## Next Steps
 

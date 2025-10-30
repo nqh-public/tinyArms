@@ -6,10 +6,7 @@
 
 ## Prerequisites
 
-- macOS 12.0+ (Apple Silicon recommended)
-- 16GB RAM (8GB minimum)
-- 5-14GB free storage (depending on models)
-- Node.js 18+
+**See 00-GETTING-STARTED.md:8-13** for prerequisites checklist (macOS 12.0+, 8GB RAM, Node.js 18+, Ollama).
 
 ---
 

@@ -2,149 +2,84 @@
 
 **What each skill does**
 
+**Full configuration examples**: See 02-CONFIGURATION.md:80-136 (balanced config)
+
 ---
 
 ## code-linting-fast
 
-**Model**: Qwen2.5-Coder-3B-Instruct (Level 2)  
-**Speed**: 2-3s per file  
-**Priority**: 2 (pre-commit hooks)  
-**Source**: `.specify/memory/constitution.md`
+**Model**: Qwen2.5-Coder-3B | **Speed**: 2-3s | **Priority**: 2
 
-**Detects**:
-- Hardcoded colors
-- Magic numbers
-- File size violations (>350 LOC)
-- Import alias violations
-- Missing line references
-- Simple DRY violations
+**What it does**: Detects constitutional violations (hardcoded colors, magic numbers, file size >350 LOC, import alias violations, missing line references) for pre-commit hooks.
 
-**Accuracy**: 85%
-
-**Usage**:
-\`\`\`bash
-tinyarms run code-linting-fast src/ --dry-run
-tinyarms run code-linting-fast src/
-\`\`\`
-
-**Config**:
-\`\`\`yaml
-code-linting-fast:
-  enabled: true
-  model: level2-code
-  constitution_path: ~/.specify/memory/constitution.md
-  priority: 2
-\`\`\`
+**Unique config**:
+```yaml
+constitution_path: ~/.specify/memory/constitution.md
+rules: [hardcoded-colors, magic-numbers, file-size, line-references, import-aliases]
+```
 
 ---
 
 ## code-linting-deep
 
-**Model**: Qwen2.5-Coder 7B (Level 3, optional)  
-**Speed**: 10-15s per file  
-**Schedule**: Weekly (Sunday 2am, idle-only)  
-**Source**: `.specify/memory/constitution.md`
+**Model**: Qwen2.5-Coder 7B | **Speed**: 10-15s | **Schedule**: Weekly (idle-only)
 
-**Detects** (vs fast):
-- Architectural anti-patterns
-- Complex DRY violations
-- Cross-file pattern analysis
-- Component decomposition issues
+**What it does**: Deep analysis for architectural anti-patterns, complex DRY violations, cross-file patterns, and component decomposition issues.
 
-**Accuracy**: 95%
-
-**Usage**:
-\`\`\`yaml
-code-linting-deep:
-  enabled: false  # Enable manually
-  model: level3
-  schedule: "0 2 * * 0"
-\`\`\`
+**Unique config**:
+```yaml
+schedule: "0 2 * * 0"  # Sunday 2am
+require_idle: true
+require_ac_power: true
+```
 
 ---
 
 ## file-naming
 
-**Model**: Gemma 3 4B (Level 2, optional)  
-**Speed**: 2-4s per file  
-**Schedule**: Batch every 5 mins
+**Model**: Gemma 3 4B | **Speed**: 2-4s | **Schedule**: Batch every 5 mins
 
-**Transforms**:
-- `Screenshot 2024.png` → `hero-mockup-mobile.png`
-- `IMG_1234.jpg` → `golden-gate-sunset.jpg`
+**What it does**: Transforms generic filenames to descriptive names (`Screenshot 2024.png` → `hero-mockup-mobile.png`).
 
-**Usage**:
-\`\`\`bash
-tinyarms run file-naming ~/Downloads --dry-run
-\`\`\`
-
-**Config**:
-\`\`\`yaml
-file-naming:
-  enabled: true
-  model: level2-specialist
-  watch_paths:
-    - ~/Downloads/
-    - ~/Desktop/
-\`\`\`
+**Unique config**:
+```yaml
+watch_paths:
+  - ~/Downloads/
+  - ~/Desktop/
+debounce: 300  # 5 minutes
+```
 
 ---
 
 ## markdown-analysis
 
-**Model**: Gemma 3 4B (Level 2, optional)  
-**Speed**: 2-4s per file  
-**Schedule**: Every 2 hours  
-**Source**: `.specify/memory/`
+**Model**: Gemma 3 4B | **Speed**: 2-4s | **Schedule**: Every 2 hours
 
-**Detects**:
-- Constitutional changes
-- Conflicting decisions
-- Documentation updates
+**What it does**: Detects constitutional changes, conflicting decisions, and documentation updates in `.specify/memory/`.
 
-**Usage**:
-\`\`\`bash
-tinyarms run markdown-analysis ~/.specify/memory/
-\`\`\`
-
-**Config**:
-\`\`\`yaml
-markdown-analysis:
-  enabled: true
-  model: level2-specialist
-  watch_paths:
-    - ~/.specify/memory/
-\`\`\`
+**Unique config**:
+```yaml
+watch_paths:
+  - ~/.specify/memory/
+extensions: [".md"]
+```
 
 ---
 
 ## audio-actions
 
-**Model**: Gemma 3 4B (Level 2, optional)  
-**Speed**: 3-5s per transcription  
-**Source**: MacWhisper exports → `~/Documents/Transcriptions/`
+**Model**: Gemma 3 4B | **Speed**: 3-5s | **Source**: MacWhisper exports
 
-**Extracts**:
-- Intent: What speaker wants
-- Actions: Specific tasks to do
-- Priority: High/medium/low
-- Context: Deadlines, people, dependencies
+**What it does**: Extracts intent, actions, priority, and context from voice transcriptions. SUGGESTS ACTIONS (not summaries).
 
-**Important**: SUGGEST ACTIONS (not summary)
+**Unique config**:
+```yaml
+watch_paths:
+  - ~/Documents/Transcriptions/
+action_mode: suggest  # Critical: don't summarize, suggest tasks
+```
 
-**Usage**: Manual export from MacWhisper → tinyArms auto-processes
-
-**Config**:
-\`\`\`yaml
-audio-actions:
-  enabled: true
-  model: level2-specialist
-  watch_paths:
-    - ~/Documents/Transcriptions/
-  action_mode: suggest
-\`\`\`
-
-**See**: [03-INTEGRATIONS.md - MacWhisper section]
+**See**: 03-INTEGRATIONS.md:68-138 (MacWhisper setup)
 
 ---
 

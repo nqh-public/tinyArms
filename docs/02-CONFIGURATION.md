@@ -11,40 +11,9 @@
 **Location**: `~/.config/tinyarms/config.yaml`
 **Purpose**: Runtime behavior, skill settings, model selection
 
-### Constants Configuration (constants.yaml)
+### Constants Configuration
 
-**Location**: `apps/tinyArms/config/constants.yaml`
-**Purpose**: Centralized constants with source documentation
-
-All numeric values (latencies, thresholds, limits) are documented with:
-- **Source**: RESEARCHED (benchmarks), ESTIMATED (extrapolation), ARBITRARY (placeholder)
-- **Status**: VERIFIED, NEEDS_VALIDATION, PLACEHOLDER, REPLACE_IN_PRODUCTION
-- **Testing plans**: What needs validation before production
-
-**Examples**:
-```yaml
-performance:
-  latency_targets_ms:
-    embeddinggemma:
-      value: 100
-      source: "RESEARCHED - Ollama benchmarks (15-50ms actual)"
-      status: "VERIFIED"
-
-    jan_nano_4b_simple:
-      value: 5500
-      source: "ESTIMATED - Base 4s + 1 MCP call 1.5s"
-      status: "HIGH_UNCERTAINTY"
-      note: "MCP latency completely untested"
-
-rate_limits:
-  model_infer_per_minute:
-    value: 60
-    source: "ARBITRARY - Placeholder (~1 call/sec)"
-    status: "REPLACE_IN_PRODUCTION"
-    action: "Run load tests to find actual capacity"
-```
-
-**See**: `docs/research/magic-numbers-audit.md` for complete audit trail
+**Developer reference**: See apps/tinyArms/config/constants.yaml for centralized constants with source documentation.
 
 ---
 
@@ -214,80 +183,6 @@ notifications:
 
 ---
 
-## Per-Skill Configuration
-
-### code-linting-fast
-
-\`\`\`yaml
-code-linting-fast:
-  enabled: true
-  model: level2-code
-  constitution_path: ~/.specify/memory/constitution.md
-  priority: 2
-  rules:
-    - hardcoded-colors
-    - magic-numbers
-    - file-size
-    - line-references
-    - import-aliases
-\`\`\`
-
-### code-linting-deep
-
-\`\`\`yaml
-code-linting-deep:
-  enabled: false
-  model: level3
-  schedule: "0 2 * * 0"
-  rules:
-    - architecture-first
-    - complex-dry
-    - component-decomposition
-  idle_only:
-    min_idle_minutes: 15
-    require_ac_power: true
-    min_free_memory_gb: 7
-\`\`\`
-
-### file-naming
-
-\`\`\`yaml
-file-naming:
-  enabled: true
-  model: level2-specialist
-  schedule: "*/5 * * * *"
-  watch_paths:
-    - ~/Downloads/
-    - ~/Desktop/
-\`\`\`
-
-### markdown-analysis
-
-\`\`\`yaml
-markdown-analysis:
-  enabled: true
-  model: level2-specialist
-  schedule: "0 */2 * * *"
-  watch_paths:
-    - ~/.specify/memory/
-\`\`\`
-
-### audio-actions
-
-\`\`\`yaml
-audio-actions:
-  enabled: true
-  model: level2-specialist
-  watch_paths:
-    - ~/Documents/Transcriptions/
-  extensions: [".txt"]
-  debounce: 5
-  action_mode: suggest
-  prompt_template: skills/audio-actions.md
-\`\`\`
-
----
-
 ## CLI Commands
 
 \`\`\`bash
@@ -321,68 +216,9 @@ export TINYARMS_LOG_LEVEL=debug
 
 ---
 
-## SQLite Database Schema (Production-Validated)
+## Database Schema
 
-**Status**: ✅ Validated against Langfuse (PostgreSQL) and Continue.dev (SQLite) patterns
-
-### Timestamp Convention
-
-**Use INTEGER (Unix epoch, UTC)**, not ISO-8601 text:
-- Smaller storage (8 bytes vs 19+ bytes)
-- Faster queries (integer comparison vs string parsing)
-- Easier math (duration = end - start)
-- Conversion: `Math.floor(Date.now() / 1000)`
-
-### Primary Key Convention
-
-**Use INTEGER PRIMARY KEY AUTOINCREMENT** (local IDs):
-- Simple, sequential, efficient
-- No collision risk (unlike UUIDs)
-- Suitable for single-device SQLite
-
-### Index Strategy
-
-**Always index**:
-- Foreign keys
-- Timestamps (for time-range queries)
-- Status/type fields (for filtering)
-- Composite: `[entity_id, timestamp]` for timeline queries
-
-### Example Schema Updates
-
-```sql
--- task_history (UPDATED)
-CREATE TABLE IF NOT EXISTS task_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  task_id TEXT NOT NULL,
-  execution_start INTEGER NOT NULL,  -- Changed from timestamp
-  execution_end INTEGER,
-  duration_ms INTEGER,                -- Pre-calculated
-  execution_status TEXT NOT NULL,
-  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-  CHECK (execution_status IN ('pending', 'running', 'completed', 'error'))
-);
-
-CREATE INDEX idx_task_history_start ON task_history(execution_start);
-CREATE INDEX idx_task_history_status ON task_history(execution_status);
-
--- cache_entries (UPDATED)
-CREATE TABLE IF NOT EXISTS cache_entries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  cache_key TEXT NOT NULL UNIQUE,
-  cache_value TEXT NOT NULL,
-  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-  last_used_at INTEGER NOT NULL DEFAULT (unixepoch()),
-  expires_at INTEGER,                 -- TTL support
-  hit_count INTEGER NOT NULL DEFAULT 1,
-  is_valid BOOLEAN NOT NULL DEFAULT 1 -- Manual invalidation
-);
-
-CREATE INDEX idx_cache_expires ON cache_entries(expires_at);
-CREATE INDEX idx_cache_last_used ON cache_entries(last_used_at);
-```
-
-**Sources**: Langfuse Prisma schema, Continue.dev SQLite patterns
+**See DATABASE-SCHEMA.md for complete SQLite schema** (production-validated patterns from Langfuse/Continue.dev).
 
 ---
 

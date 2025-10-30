@@ -41,19 +41,17 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
   "component": "Button",
   "version": "v2.1.0",
   "props": {
-    "variant": ["default", "destructive", "outline", "secondary", "ghost", "link"],
+    "variant": ["default", "destructive", ...],
     "size": ["default", "sm", "lg", "icon"],
-    "asChild": "boolean (Radix Slot pattern)"
+    ...
   },
-  "accessibility": {
-    "aria-label": "required if no visible text",
-    "keyboard": "Enter/Space triggers onClick",
-    "focus": "visible ring on focus-visible"
-  },
-  "examples": ["button.tsx:12-18", "examples/forms.tsx:42"],
+  "accessibility": { "aria-label": "required if no visible text", ... },
+  "examples": ["button.tsx:12-18", ...],
   "breaking_changes": "v2.0.0 removed 'ghost' variant, re-added in v2.1.0"
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: 4B model can parse docs + synthesize key info faster than Claude Code reading raw documentation (saves 3-5K tokens per query)
 
@@ -77,21 +75,16 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
 {
   "direct_impact": [
     "apps/ngoquochuy.com/package.json:12 (@tanstack/router-devtools incompatible)",
-    "packages/shared/src/routing/hooks.ts:8 (useNavigate API changed)"
+    ...
   ],
-  "indirect_impact": [
-    "@tanstack/react-query v5 now required (currently v4.2.0)",
-    "breaking: createRoute() signature changed (adds 'id' parameter)"
-  ],
-  "resolution_steps": [
-    "1. Upgrade @tanstack/react-query to v5.0.0+",
-    "2. Update all createRoute() calls with unique IDs",
-    "3. Replace useNavigate().push() with navigate()"
-  ],
+  "indirect_impact": ["@tanstack/react-query v5 now required", ...],
+  "resolution_steps": ["1. Upgrade @tanstack/react-query to v5.0.0+", ...],
   "risk_level": "medium",
   "estimated_files_affected": 8
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: 4B model + MCP can traverse dependency trees locally without sending full codebase to Claude Code (saves 10-15K tokens)
 
@@ -117,22 +110,20 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
     {
       "pattern": "better-auth with Drizzle adapter",
       "apps": ["brandr-bookings", "latinamerica.hu"],
-      "files": [
-        "apps/brandr-bookings/src/auth/config.ts:12-45",
-        "apps/latinamerica.hu/src/server/auth.ts:8-32"
-      ],
-      "shared_dependencies": ["@nqh/auth-better-auth", "drizzle-orm"]
+      "files": ["apps/brandr-bookings/src/auth/config.ts:12-45", ...],
+      "shared_dependencies": ["@nqh/auth-better-auth", ...]
     },
     {
       "pattern": "TanStack Start server functions",
       "apps": ["ngoquochuy.com"],
-      "files": ["apps/ngoquochuy.com/src/server/auth.ts:5-28"],
-      "note": "Simplified auth for static-heavy site"
+      ...
     }
   ],
   "recommendation": "Use @nqh/auth-better-auth (2/3 apps), extract common config to packages/systems/auth/"
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Searches locally without loading all files into Claude Code context (saves 8-12K tokens)
 
@@ -159,20 +150,15 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
       "app": "brandr-bookings",
       "file": "tsconfig.json:8",
       "difference": "strict: false (baseline: true)",
-      "impact": "Type safety reduced, may hide bugs",
-      "last_changed": "PR #42 (2024-10-15)"
+      ...
     },
-    {
-      "app": "latinamerica.hu",
-      "file": "tsconfig.json:12",
-      "difference": "target: ES2020 (baseline: ES2022)",
-      "impact": "Missing modern JS features",
-      "last_changed": "Initial commit"
-    }
+    ...
   ],
   "action": "Standardize via packages/tsconfig/base.json, extend in apps"
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Scans multiple files + synthesizes differences without loading all into Claude Code (saves 5-8K tokens)
 
@@ -196,17 +182,13 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
   "principle": "X. File Organization Standards",
   "rule": "File size: ≤350 LOC (target 300)",
   "location": "constitution.md:450-557",
-  "exceptions": [
-    "Generated code (migrations, GraphQL types)",
-    "Type definition files (if unavoidable)"
-  ],
+  "exceptions": ["Generated code (migrations, GraphQL types)", ...],
   "enforcement": "ESLint rule max-lines, hard block in pre-commit hook",
-  "related_principles": [
-    "II. Evidence-Based Completion (line references required)",
-    "XVII. Pragmatic Atomic Composability (decomposition rules)"
-  ]
+  "related_principles": ["II. Evidence-Based Completion (line references required)", ...]
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: 4B model can semantically search + extract context faster than grep + manual reading (saves 2-3K tokens)
 
@@ -232,23 +214,15 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
   "key_changes": [
     "1. Replace vite.config.ts with app.config.ts",
     "2. Convert React Router routes to file-based routing",
-    "3. Replace client-side data fetching with createFileRoute + loader",
-    "4. Move API routes to server functions"
+    ...
   ],
-  "community_examples": [
-    {
-      "repo": "example-user/vite-to-start",
-      "pr": "#12",
-      "highlights": "Shows loader pattern for existing React Query hooks"
-    }
-  ],
+  "community_examples": [{"repo": "example-user/vite-to-start", ...}],
   "estimated_effort": "4-8 hours for medium app",
-  "gotchas": [
-    "TanStack Start requires Node 18+",
-    "SSR breaks some client-only libraries (wrap with <ClientOnly>)"
-  ]
+  "gotchas": ["TanStack Start requires Node 18+", ...]
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Synthesizes multiple sources into actionable plan (saves 10-15K tokens from reading full docs + examples)
 
@@ -273,20 +247,13 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
   "error": "Cannot read property 'current' of undefined",
   "library": "@tanstack/react-router",
   "likely_cause": "RouterProvider not wrapping component tree",
-  "evidence": [
-    "apps/your-app/src/main.tsx:8 (missing RouterProvider)",
-    "GitHub issue #234: Same error when RouterProvider omitted"
-  ],
-  "fix": [
-    "1. Wrap <App /> with <RouterProvider router={router} />",
-    "2. Ensure router created via createRouter() before render"
-  ],
-  "related_issues": [
-    "@tanstack/react-router#234 (closed)",
-    "Stack Overflow: 'React Router context undefined' (similar pattern)"
-  ]
+  "evidence": ["apps/your-app/src/main.tsx:8 (missing RouterProvider)", ...],
+  "fix": ["1. Wrap <App /> with <RouterProvider router={router} />", ...],
+  "related_issues": ["@tanstack/react-router#234 (closed)", ...]
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Correlates local error with known patterns in docs/issues (saves 5-8K tokens from manual searching)
 
@@ -310,18 +277,14 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
 {
   "found": true,
   "location": "packages/shared/src/utils/format-currency.ts",
-  "exports": ["formatCurrency", "parseCurrency", "getCurrencySymbol"],
+  "exports": ["formatCurrency", "parseCurrency", ...],
   "usage_example": "import { formatCurrency } from '@nqh/shared';\nformatCurrency(1234.5, 'USD') // '$1,234.50'",
-  "consumers": [
-    "apps/brandr-bookings/src/components/pricing.tsx:23",
-    "apps/latinamerica.hu/src/features/payments/invoice.tsx:45"
-  ],
-  "alternatives": {
-    "found": false,
-    "suggestion": "If formatCurrency doesn't meet needs, extend rather than duplicate"
-  }
+  "consumers": ["apps/brandr-bookings/src/components/pricing.tsx:23", ...],
+  "alternatives": {"found": false, "suggestion": "If formatCurrency doesn't meet needs, extend rather than duplicate"}
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Prevents duplication by searching packages/ + REGISTRY.md before creating new code (saves 3-5K tokens from reading multiple files)
 
@@ -346,25 +309,16 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
   "function": "formatCurrency",
   "current_signature": "(amount: number, currency: string) => string",
   "consumers": [
-    {
-      "app": "brandr-bookings",
-      "files": [
-        "src/components/pricing.tsx:23",
-        "src/features/payments/invoice.tsx:45"
-      ],
-      "usage_count": 12
-    },
-    {
-      "app": "latinamerica.hu",
-      "files": ["src/features/payments/invoice.tsx:18"],
-      "usage_count": 3
-    }
+    {"app": "brandr-bookings", "files": ["src/components/pricing.tsx:23", ...], "usage_count": 12},
+    {"app": "latinamerica.hu", "files": ["src/features/payments/invoice.tsx:18"], "usage_count": 3}
   ],
   "total_callsites": 15,
   "recommendation": "Create formatCurrencyV2() with new signature, deprecate old function, migrate callsites incrementally",
   "estimated_refactor_time": "1-2 hours"
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Traces imports without loading all files into Claude Code (saves 8-12K tokens)
 
@@ -391,20 +345,16 @@ jan-nano-4b specializes in **deep research via MCP tool calling**, trained speci
       "code": "className=\"bg-[#3B82F6]\"",
       "violation": "Hardcoded hex color",
       "fix": "Use bg-primary or define semantic token in globals.css",
-      "principle": "IV. Zero Invention Policy (design tokens)"
+      ...
     },
-    {
-      "file": "button.tsx:23",
-      "code": "style={{ padding: '12px 24px' }}",
-      "violation": "Inline style with magic numbers",
-      "fix": "Use className=\"px-6 py-3\" (Tailwind spacing scale)",
-      "principle": "IV. Zero Invention Policy (no magic numbers)"
-    }
+    ...
   ],
   "summary": "2 violations found, 0 false positives",
   "action": "Run tinyArms code-linting-fast to fix automatically"
 }
 ```
+
+**Full JSON schema**: Available in actual implementation
 
 **Value**: Pre-scans files for violations before running expensive Qwen 7B linter (saves 5-10K tokens + 10s per file)
 

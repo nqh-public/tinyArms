@@ -4,33 +4,19 @@
 
 ---
 
-## Ollama Not Running
+## Quick Diagnostics
 
-**Symptom**: `Error: connect ECONNREFUSED localhost:11434`
+**Before filing issues**:
+```bash
+# Check Ollama status
+ollama list && curl http://localhost:11434/api/tags
 
-**Solution**:
-\`\`\`bash
-# Start Ollama
-ollama serve &
+# Check tinyArms health
+tinyarms status --verbose
 
-# Check status
-tinyarms status
-\`\`\`
-
----
-
-## Model Not Found
-
-**Symptom**: `Error: model not found: qwen2.5-coder:3b`
-
-**Solution**:
-\`\`\`bash
-# List available models
-ollama list
-
-# Download missing model
-ollama pull qwen2.5-coder:3b
-\`\`\`
+# View logs
+tail -f ~/.config/tinyarms/logs/*.log
+```
 
 ---
 

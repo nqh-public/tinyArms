@@ -37,28 +37,17 @@ Tiny local AI models (<500MB) that watch your files 24/7, enforce your constitut
 
 ### Tiered Routing (Performance-First)
 
-```
-Level 0: Deterministic Rules (<1ms, 60-75% coverage)
-├─ File extension detection, regex patterns
-└─ No AI, pure logic
-
-Level 1: Tiny Embeddings (<100ms, 20-25% coverage)
-├─ Model: embeddinggemma:300m (200MB)
-├─ Purpose: Semantic classification, intent extraction
-└─ Install: ollama pull embeddinggemma:300m
-
-Level 2: Small Generalists (2-4s, 10-15% coverage)
-├─ Primary: Qwen2.5-Coder-3B-Instruct (1.9GB, code linting)
-├─ Secondary: Qwen3-4B-Instruct (2.5GB, general tasks, optional)
-└─ Specialists: Gemma 3 4B (2.3GB, file naming, optional)
-
-Level 3: Code Specialists (10-15s, <5% coverage, idle-only)
-├─ Model: Qwen2.5-Coder 7B (4.7GB, optional)
-├─ Trigger: Only when idle + AC power + 7GB free RAM
-└─ Purpose: Deep architectural analysis
-```
-
 **Philosophy**: Use the smallest/fastest model that meets accuracy requirements. 60-75% of tasks handled by deterministic rules before touching AI.
+
+**4-Level System**:
+- Level 0: Deterministic rules (<1ms, 60-75% coverage)
+- Level 1: Tiny embeddings (<100ms, 20-25% coverage)
+- Level 2: Small generalists (2-4s, 10-15% coverage)
+- Level 3: Code specialists (10-15s, <5% coverage, idle-only)
+
+**See 01-ARCHITECTURE.md for complete tiered routing design**:
+- System diagram: 01-ARCHITECTURE.md:10-52
+- Level descriptions: 01-ARCHITECTURE.md:58-174
 
 ---
 
@@ -101,43 +90,18 @@ Returns: Constitutional violations with line refs
 
 ---
 
-## Hardware Requirements
+## Hardware & Performance
 
-### 8GB RAM Mac
-- **Levels 0-2**: 1.8GB total ✅ SAFE
-- **Level 3**: Runs ONLY on idle/AC power (4.7GB model + 3GB KV cache = ~8GB peak)
+**See 01-MODELS.md for complete specs**:
+- Hardware requirements: 01-MODELS.md:242-267
+- Storage breakdowns: 01-MODELS.md:197-236
+- Performance estimates: 01-MODELS.md:272-280
+- Battery impact: 01-MODELS.md:474-500
 
-### 16GB RAM Mac (Recommended)
-- **All levels**: ~9.5GB peak ✅ SAFE (6GB free under load)
-- **Storage**: 5-14GB depending on models chosen
-
-### Platform
-- **OS**: macOS 12.0+ (Apple Silicon recommended)
-- **Storage**: 5GB+ free storage
-- **Dependencies**: Ollama, Node.js 18+
-
----
-
-## Storage Options
-
-| Configuration | Models | Storage | Free RAM |
-|--------------|--------|---------|----------|
-| **Core only** | embeddinggemma + Qwen2.5-Coder-3B | 2.1GB | ~14GB |
-| **Core + research** | + jan-nano-4b (Q8) | 6.4GB | ~10GB |
-| **All models** | + Qwen3-4B + Gemma + Qwen 7B | 13.9GB | ~6GB |
-
----
-
-## Performance Targets
-
-**⚠️ Untested estimates. Run benchmarks on YOUR hardware to measure actual performance.**
-
-- **Speed Targets**:
-  - Level 0: <1ms (deterministic rules)
-  - Level 1: <100ms (tiny embeddings)
-  - Level 2: 2-4s (small generalists)
-  - Level 3: 10-15s (code specialists, idle-only)
-
+**Quick Summary**:
+- **8GB RAM**: Levels 0-2 safe, Level 3 idle-only
+- **16GB RAM**: All levels safe (~9.5GB peak)
+- **Storage**: 2.1GB (core) to 12.6GB (all models)
 - **Accuracy Target**: 90% overall (human-reviewable)
 - **Battery Impact**: 1-5%/day (estimate, needs measurement)
 
@@ -175,30 +139,12 @@ Returns: Constitutional violations with line refs
 
 ---
 
-## Architecture Diagram
+## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 USER INTERFACES                     │
-├─────────────────────────────────────────────────────┤
-│  1. CLI           → tinyarms <command>              │
-│  2. MCP Server    → Claude Code integration         │
-│  3. Menu Bar App  → Human control panel             │
-│  4. LaunchAgent   → Scheduled automation            │
-└─────────────────────────────────────────────────────┘
-                        ↓
-┌─────────────────────────────────────────────────────┐
-│                  CORE ENGINE                        │
-│  - Tiered Router (Rules → Gemma → Qwen → Ask)     │
-│  - Skills (file-naming, code-linting, etc.)        │
-│  - SQLite State Management                          │
-└─────────────────────────────────────────────────────┘
-                        ↓
-┌─────────────────────────────────────────────────────┐
-│                MODEL LAYER                          │
-│  - Ollama: embeddinggemma + Qwen variants          │
-└─────────────────────────────────────────────────────┘
-```
+**See 01-ARCHITECTURE.md for system design**:
+- System diagram: 01-ARCHITECTURE.md:10-52
+- Tiered routing explained: 01-ARCHITECTURE.md:58-174
+- Skills overview: 01-ARCHITECTURE.md:241-277
 
 ---
 

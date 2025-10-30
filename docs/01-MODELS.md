@@ -284,75 +284,10 @@ Total RAM = Weights + KV Cache + Ollama Runtime (50-70 MB)
 
 ## Configuration Examples
 
-### Minimal (Core Only)
-
-\`\`\`yaml
-models:
-  level1: embeddinggemma:300m
-  level2-code: qwen2.5-coder:3b
-
-skills:
-  code-linting-fast:
-    enabled: true
-    model: level2-code
-    priority: 2
-\`\`\`
-
-**Storage:** 3.1GB  
-**Features:** Fast code linting only
-
-### Balanced (Core + Gemma Reused)
-
-\`\`\`yaml
-models:
-  level1: embeddinggemma:300m
-  level2-code: qwen2.5-coder:3b
-  level2-specialist: gemma3-4b  # Reused from Cotypist
-
-skills:
-  code-linting-fast:
-    enabled: true
-    model: level2-code
-
-  file-naming:
-    enabled: true
-    model: level2-specialist
-
-  audio-actions:
-    enabled: true
-    model: level2-specialist
-\`\`\`
-
-**Storage:** 3.1GB (no duplicate)  
-**Features:** All skills except deep linting
-
-### Complete (All Models)
-
-\`\`\`yaml
-models:
-  level1: embeddinggemma:300m
-  level2-code: qwen2.5-coder:3b
-  level2-general: qwen3:4b
-  level2-specialist: gemma3-4b
-  level3: qwen2.5-coder:7b
-
-skills:
-  code-linting-fast:
-    enabled: true
-    model: level2-code
-
-  code-linting-deep:
-    enabled: true
-    model: level3
-    schedule: "0 2 * * 0"
-
-  file-naming:
-    enabled: true
-    model: level2-specialist
-\`\`\`
-
-**Storage:** 12.6GB  
-**Features:** All skills including deep analysis
+**See 02-CONFIGURATION.md for full YAML configs**:
+- Minimal config (2.1GB): 02-CONFIGURATION.md:57-76
+- Balanced config (3.1GB): 02-CONFIGURATION.md:80-136
+- Complete config (12.6GB): 02-CONFIGURATION.md:140-213
 
 ---
 
@@ -385,40 +320,6 @@ Key alternatives:
 - Add new specialists for specific domains
 - Fine-tune models on user feedback
 - Implement learning system
-
----
-
-## Industry Validation (Researched 2025-10-29)
-
-**Status**: Model choices validated by industry research
-
-### What's Validated ✅
-
-**embeddinggemma-300m (Level 1)**:
-- ✅ Best multilingual model <500M params (MTEB ~70)
-- ✅ Highest-ranking text-only model in size class
-- ✅ Used in production: Semantic Router (2.9k stars), Red Hat LLM-d
-- **Reference**: research/01-model-selection-validation.md:135-153
-
-**Qwen2.5-Coder-3B (Level 2)**:
-- ✅ Best coding model in 3B class (HumanEval ~45%)
-- ✅ Outperforms general 4B models on code (Qwen3-4B: 62% base)
-- ✅ Code-specialized: 5.5T tokens across 92 languages
-- **Reference**: research/01-model-selection-validation.md:156-174
-
-**Qwen2.5-Coder-7B (Level 3, optional)**:
-- ✅ Near-frontier coding performance (HumanEval 84.8%)
-- ✅ Matches larger models (comparable to 14B-32B general models)
-- ✅ Used in production: Continue.dev, coding assistants
-- **Reference**: research/01-model-selection-validation.md:176-195
-
-**Q4 Quantization Strategy**:
-- ✅ Industry standard for local inference (Ollama, llama.cpp)
-- ✅ Expected accuracy loss: 2-5% (acceptable trade-off)
-- ✅ Enables on-device inference on consumer hardware
-- **Reference**: research/01-model-selection-validation.md:282-343
-
-**Verdict**: No model changes needed. Choices optimal for coding workloads.
 
 ---
 

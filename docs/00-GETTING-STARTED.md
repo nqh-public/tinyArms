@@ -14,84 +14,25 @@
 
 ---
 
-## Quick Install
+## Installation
 
+**See 02-INSTALLATION.md for setup steps**:
+- Ollama installation: 02-INSTALLATION.md:39-48
+- Model installation: 02-INSTALLATION.md:49-81
+- Verification: 02-INSTALLATION.md:100-109
+
+**Quick Install**:
 ```bash
-# 1. Clone repository
 cd ~/path/to/tinyarms
-
-# 2. Run setup script
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-The setup script will:
-1. ✓ Check prerequisites (Node.js, npm)
-2. ✓ Install Ollama (if needed)
-3. ✓ Create config directories
-4. ✓ Install dependencies
-5. ✓ Link CLI globally
-6. ✓ Download embeddinggemma 300M (200MB) - semantic routing
-7. ✓ Download Qwen2.5-Coder-3B-Instruct (1.9GB) - code linting
+**Storage**: 2.1GB (core models) to 12.6GB (all models)
 
----
-
-## Core Models (Required)
-
-```bash
-# Level 1: Semantic routing (200MB)
-ollama pull embeddinggemma:300m
-
-# Level 2: Code linting (1.9GB)
-ollama pull qwen2.5-coder:3b
-```
-
-**Total**: 2.1GB (17.9GB remaining)
-
----
-
-## Optional Models
-
-### General instruction-following tasks
-
-```bash
-# Level 2 Secondary: General tasks (2.5GB)
-ollama pull qwen3:4b
-```
-
-### File naming, markdown analysis (reuse from Cotypist)
-
-```bash
-# Create Modelfile pointing to Cotypist's model
-cat > Modelfile << 'EOF'
-FROM /Users/huy/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
-EOF
-
-# Register with Ollama (symlink, not copy)
-ollama create gemma3-4b -f Modelfile
-
-# Verify
-ollama list  # Should show gemma3-4b (2.3GB)
-```
-
-### Deep architectural analysis (weekly scans)
-
-```bash
-# Level 3: Architectural analysis (4.7GB)
-# Install ONLY if fast linting misses violations
-ollama pull qwen2.5-coder:7b
-```
-
----
-
-## Storage Breakdown
-
-| Configuration | Storage | Free |
-|--------------|---------|------|
-| **Core only** | 2.1GB | 17.9GB |
-| **Core + Qwen3-4B** | 4.6GB | 15.4GB |
-| **Core + Gemma 3 4B reused** | 2.1GB | 17.9GB (no duplicate) |
-| **All models** | 9.3GB | 10.7GB |
+**See 01-MODELS.md for model details**:
+- Model benchmarks: 01-MODELS.md:22-194
+- Storage breakdowns: 01-MODELS.md:197-236
 
 ---
 
@@ -126,46 +67,18 @@ tinyarms run file-naming ~/Downloads
 
 ---
 
-## Minimal Configuration
+## Configuration
 
-Edit `~/.config/tinyarms/config.yaml`:
+**See 02-CONFIGURATION.md for config options**:
+- Minimal config: 02-CONFIGURATION.md:57-76
+- Balanced config: 02-CONFIGURATION.md:80-136
+- Complete config: 02-CONFIGURATION.md:140-213
 
-```yaml
-models:
-  level1: embeddinggemma:300m           # 200MB, semantic routing
-  level2-code: qwen2.5-coder:3b         # 1.9GB, code linting (primary)
-  level2-general: qwen3:4b              # 2.5GB, general tasks (optional)
-  level2-specialist: gemma3-4b          # 2.3GB, file naming (optional)
-  level3: qwen2.5-coder:7b              # 4.7GB, deep analysis (optional)
-
-skills:
-  # Fast code linting (pre-commit hooks)
-  code-linting-fast:
-    enabled: true
-    model: level2-code                  # Qwen2.5-Coder-3B-Instruct
-    constitution_path: ~/.specify/memory/constitution.md
-    priority: 2                         # Within seconds
-
-  # File naming (optional specialist)
-  file-naming:
-    enabled: true
-    model: level2-specialist            # Gemma 3 4B (optional)
-    watch_paths:
-      - ~/Downloads/
-      - ~/Desktop/
-
-  # Markdown detection
-  markdown-analysis:
-    enabled: true
-    watch_paths:
-      - ~/.specify/memory/
-
-  # Voice transcriptions
-  audio-actions:
-    enabled: true
-    model: level2-specialist            # Gemma 3 4B (optional)
-    watch_paths:
-      - ~/Documents/Transcriptions/
+**Quick Config**:
+```bash
+mkdir -p ~/.config/tinyarms
+cp config/default.yaml ~/.config/tinyarms/config.yaml
+nano ~/.config/tinyarms/config.yaml
 ```
 
 ---

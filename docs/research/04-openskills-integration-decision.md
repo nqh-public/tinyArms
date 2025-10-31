@@ -96,57 +96,152 @@ tinyarms lint <file> [--constitution <path>]
 
 ### config.yaml (tinyArms-Specific)
 
-**Purpose**: Runtime configuration
+**Purpose**: Runtime configuration (NO triggers section - extracted from SKILL.md frontmatter)
 
 ```yaml
+# Model configuration (tiered routing per skill)
 model:
-  level: 2
+  level: 2                          # Default tier (0-3)
   primary: qwen2.5-coder:3b-instruct
+  fallback: qwen2.5-coder:7b
   confidence_threshold: 0.85
 
-autonomous:
-  watch_patterns: ["**/*.ts"]
-  schedule: "*/30 * * * *"
+# Activation modes
+activation:
+  cli: true                         # Enable CLI invocation
+  automated: true                   # Enable scheduled execution
+  gui: false                        # GUI not built yet
 
+# Automated scheduling (if activation.automated = true)
+schedule:
+  cron: "*/30 * * * *"              # Every 30 min
+  watch_patterns: ["**/*.ts", "**/*.tsx"]
+  batch_size: 10
+
+# Performance constraints
 performance:
   max_latency_ms: 3000
-  battery_constraint: "idle_only"
+  memory_budget_mb: 2048
+  battery_constraint: idle_only    # always | ac_only | idle_only
 
+# Prompts (extracted from code)
 prompts:
   system: "You are a linter...\n{constitution}"
   user: "Analyze:\n```\n{code}\n```"
 ```
 
----
-
-## Architecture
-
-### Core Framework (src/core/)
-
-| Component | Purpose |
-|-----------|---------|
-| skill-loader.ts | Load SKILL.md + config.yaml |
-| skill-executor.ts | Execute skill (core logic) |
-| skill-registry.ts | Auto-discover skills/ |
-
-### Wrappers (src/wrappers/)
-
-| Component | Purpose |
-|-----------|---------|
-| cli-wrapper.ts | CLI invocation (simple) |
-| autonomous-wrapper.ts | LaunchAgent (batching/caching) |
-
-**Pattern**: Wrapper → Core Skill → Result
+**Note**: SKILL.md frontmatter (name + description) is source for routing triggers, not config.yaml
 
 ---
 
-## Invocation Modes
+## Architecture (Three Components)
 
-| Mode | Trigger | Characteristics |
-|------|---------|-----------------|
-| CLI | `tinyarms lint file.ts` | Single-shot, immediate |
-| Autonomous | LaunchAgent (schedule) | Batched, cached |
-| Claude Code | `openskills read tinyarms/code-linting` | Progressive disclosure |
+### 1. Skills Layer (Self-Contained)
+
+**Per skill structure**:
+```
+skills/{name}/
+├── SKILL.md           # OpenSkills format (agents read)
+├── config.yaml        # Runtime config (no triggers)
+├── index.ts           # Exports execute() + getConfig()
+├── executor.ts        # Core logic (model loading, inference)
+├── scripts/           # Optional: Helpers
+├── references/        # Optional: Docs for context
+└── assets/            # Optional: Templates
+```
+
+**index.ts interface** (flexible per skill):
+```typescript
+export async function execute(input: any): Promise<any>
+export function getConfig(): SkillConfig
+```
+
+### 2. Routing Layer (Optional - Ambiguous Requests Only)
+
+**src/routing/skill-registry.ts**:
+- Auto-discovers skills in `skills/` folder
+- Extracts SKILL.md frontmatter (name + description)
+- Routes ambiguous requests via embeddings
+- Direct lookups bypass routing
+
+**When routing is used**:
+- ❌ CLI: `tinyarms lint file.ts` → Direct (knows skill = code-linting)
+- ❌ Scheduler: Reads config → Direct (knows which skill)
+- ❌ GUI: User selects skill → Direct
+- ✅ Ambiguous: "help me with this file" → Routing needed (semantic match)
+
+### 3. Activation Layer
+
+**src/activation/cli-handler.ts**:
+- Maps CLI commands to skill names (lint → code-linting)
+- No routing needed
+
+**src/core/scheduler.ts**:
+- Reads all config.yaml with `activation.automated = true`
+- Schedules jobs (cron, file watchers)
+- Direct execution per skill
+
+**src/activation/gui-handler.ts** (future):
+- SwiftUI menu bar app
+- User selects skill from menu
+- Direct execution
+
+---
+
+## Invocation Flows
+
+### Direct Invocation (No Routing)
+
+**CLI Mode**:
+```
+tinyarms lint file.ts
+  ↓
+cli-handler maps: "lint" → "code-linting"
+  ↓
+Load: skills/code-linting/index.ts
+  ↓
+Execute: skills/code-linting/executor.ts
+  ↓
+Return: JSON violations
+```
+
+**Scheduled Mode**:
+```
+scheduler reads config.yaml (activation.automated = true)
+  ↓
+cron triggers OR file watcher detects change
+  ↓
+Direct execution: skills/code-linting/index.ts
+  ↓
+Log to SQLite
+```
+
+**Claude Code Mode**:
+```
+Claude: openskills read tinyarms/code-linting
+  ↓
+Shows: SKILL.md instructions
+  ↓
+Claude runs: tinyarms lint file.ts
+  ↓
+Falls back to CLI mode (direct)
+```
+
+### Ambiguous Requests (Routing Needed)
+
+```
+User: "help me with this file"
+  ↓
+skill-registry.route("help me with this file")
+  ↓
+Extract all SKILL.md descriptions
+  ↓
+embeddinggemma: Semantic match
+  ↓
+Returns: Best matching skill name
+  ↓
+Load + execute skill
+```
 
 ---
 
@@ -171,31 +266,61 @@ prompts:
 
 ## Implementation Plan
 
-### Phase 1: Generate Skills with skill-creator
+### Phase 1: First Skill (code-linting)
 
-1. Run `init_skill.py` for code-linting
-2. Edit generated SKILL.md (replace TODOs, choose structure pattern)
-3. Add config.yaml (tinyArms-specific runtime config)
-4. Move linter.ts logic to executor.ts (no changes)
-5. Validate with `quick_validate.py`
+1. **Generate structure**: `init_skill.py code-linting`
+2. **Edit SKILL.md**: Replace TODOs, choose Workflow-Based pattern
+3. **Create config.yaml**: Model config, activation modes, schedule, performance, prompts
+4. **Create index.ts**: Export `execute(input)` and `getConfig()`
+5. **Create executor.ts**: Move linter.ts logic (no changes to logic)
+6. **Add references/**: constitution-excerpt.md (2000 chars)
+7. **Validate**: `quick_validate.py` passes
 
 **Success**: `tinyarms lint file.ts` works identically + SKILL.md valid
 
-### Phase 2: Validate
+**Key learnings**:
+- SKILL.md frontmatter = routing triggers (no config.yaml duplication)
+- Flexible input/output per skill (not standardized)
+- config.yaml has activation modes (cli, automated, gui)
 
-1. Add 2nd skill (file-naming OR markdown-analysis)
-2. Extract ACTUAL duplicated patterns
-3. Document learnings
+### Phase 2: Infrastructure
 
-**Success**: 2 skills working, shared code extracted
+1. **Build skill-registry.ts** (src/routing/):
+   - Auto-discover skills/ folder
+   - Extract SKILL.md frontmatter (name + description)
+   - Index for routing (optional, ambiguous requests only)
 
-### Phase 3: Autonomous
+2. **Build cli-handler.ts** (src/activation/):
+   - Map commands to skill names (lint → code-linting)
+   - Direct skill loading (no routing)
+   - Argument parsing
 
-1. Create autonomous-wrapper.ts
-2. Add batching + semantic caching
-3. LaunchAgent integration
+3. **Build routing for ambiguous** (src/routing/):
+   - Hybrid: keywords → embeddings
+   - embeddinggemma-300m for semantic matching
 
-**Success**: Skills run automatically on schedule
+**Success**: CLI works with skill-registry, ambiguous requests route correctly
+
+### Phase 3: Validate with 2nd Skill
+
+1. Add file-naming OR markdown-analysis
+2. Test skill-registry auto-discovery
+3. Extract duplicated patterns (if 2+ exist)
+
+**Success**: 2 skills working, infrastructure validated
+
+### Phase 4: Autonomous Mode
+
+1. **Build scheduler.ts** (src/core/):
+   - Read all config.yaml with `activation.automated = true`
+   - Schedule jobs (cron via node-cron or LaunchAgent)
+   - File watchers (via chokidar)
+
+2. **Add batching logic**: Process multiple files per execution
+3. **Add semantic caching**: Level -1 cache (FrugalGPT pattern)
+4. **LaunchAgent integration**: macOS native scheduling
+
+**Success**: Skills run automatically on schedule, batched, cached
 
 ---
 

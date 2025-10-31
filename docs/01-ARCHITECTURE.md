@@ -9,13 +9,25 @@ For detailed implementation, model decisions, configuration, and integrations, s
 ## System Overview
 
 ```
-Human & AI Agent Interfaces
-├─ CLI (tinyarms command)
-├─ MCP Server (for Claude Code integration)
-├─ SwiftUI Menu Bar App (planned)
-└─ LaunchAgents (scheduled automation)
+Activation Modes (Entry Points)
+├─ CLI Handler (tinyarms lint file.ts) → Direct skill invocation
+├─ Scheduler (cron/file watchers) → Automated skill execution
+├─ GUI Handler (SwiftUI, future) → User-selected skill
+└─ Ambiguous Requests → Routing layer (optional)
           ↓
-    Core Engine (Tiered Router with Confidence Scoring)
+    Routing Layer (Optional - Ambiguous Requests Only)
+├─ skill-registry.ts (auto-discovers skills/)
+├─ Extracts SKILL.md frontmatter (name + description)
+├─ Hybrid routing: Keywords → embeddings
+└─ embeddinggemma:300m for semantic matching
+          ↓
+    Skills Layer (Self-Contained Execution Units)
+├─ code-linting/ (SKILL.md + config.yaml + index.ts + executor.ts)
+├─ file-naming/ (same structure)
+├─ markdown-analysis/ (same structure)
+└─ audio-actions/ (same structure)
+          ↓
+    Tiered Routing (Per Skill, Configured in config.yaml)
 ├─ Level -1: Semantic Cache (Phase 03, researched, 15-25% elimination)
 │  └─ Vector similarity >0.95 → return cached (<50ms)
 ├─ Level 0: Deterministic rules (<1ms, 60-75% of tasks)
@@ -32,16 +44,9 @@ Human & AI Agent Interfaces
 │  └─ Qwen2.5-Coder 7B (4.7GB, architectural violations, weekly scans)
 └─ Industry Validation: 90% aligned (FrugalGPT, RouteLLM, GitHub Copilot patterns)
           ↓
-    Skills
-├─ code-linting-fast (pre-commit, Level 2: Qwen2.5-Coder-3B-Instruct, priority 2)
-├─ code-linting-deep (weekly scan, Level 3: Qwen 7B, optional)
-├─ file-naming (batch every 5 mins, Level 2: optional specialist)
-├─ markdown-analysis (every 2 hours, .specify/memory/)
-└─ audio-actions (MacWhisper → SUGGEST ACTIONS not summary)
-          ↓
     Storage
 ├─ SQLite (task history, metrics, feedback)
-└─ Config (YAML for humans, JSON API for agents)
+└─ Config (YAML per skill + global settings)
           ↓
     Models (Ollama)
 ├─ embeddinggemma:300m (200MB, semantic routing)
@@ -197,23 +202,172 @@ Human & AI Agent Interfaces
 
 **Full details**: See [research/02-confidence-scoring-patterns.md](research/02-confidence-scoring-patterns.md)
 
+---
+
+## Skills Layer
+
+**Status**: Architecture defined (2025-10-30)
+**Implementation**: Phase 1 in progress (code-linting)
+
+### Overview
+
+Skills are self-contained execution units. Each skill:
+- Defines WHAT it does (SKILL.md - OpenSkills format)
+- Configures HOW it runs (config.yaml - runtime settings)
+- Implements core logic (executor.ts - model inference)
+- Exports standard interface (index.ts - execute + getConfig)
+
+### Structure (Per Skill)
+
+```
+skills/{name}/
+├── SKILL.md           # OpenSkills format (for agents)
+├── config.yaml        # Runtime config (model, activation, schedule)
+├── index.ts           # Exports execute() + getConfig()
+├── executor.ts        # Core logic (model loading, inference)
+├── scripts/           # Optional: Helper scripts
+├── references/        # Optional: Docs for context
+└── assets/            # Optional: Templates
+```
+
+### Interface (Flexible Per Skill)
+
+Each skill exports:
+```typescript
+export async function execute(input: any): Promise<any>
+export function getConfig(): SkillConfig
+```
+
+**Note**: Input/output schemas are skill-specific (not standardized)
+
+### SKILL.md Frontmatter = Routing Triggers
+
+**No duplication**: config.yaml does NOT include triggers
+
+**skill-registry extracts**:
+```markdown
+---
+name: code-linting
+description: Lint code against constitutional principles using Qwen2.5-Coder-3B
+---
+```
+
+**Used for**:
+- Direct lookup: CLI maps "lint" → "code-linting"
+- Semantic routing: Ambiguous requests match via description
+
+### config.yaml Schema
+
+| Section | Purpose |
+|---------|---------|
+| `model` | Tiered routing config (level, primary, fallback, threshold) |
+| `activation` | Which modes enabled (cli, automated, gui) |
+| `schedule` | Automated execution (cron, watch_patterns, batch_size) |
+| `performance` | Resource limits (latency, memory, battery) |
+| `prompts` | System/user templates |
+
+**Full schema**: See [research/04-openskills-integration-decision.md](research/04-openskills-integration-decision.md)
+
+---
+
+## Activation Modes
+
+**Status**: Architecture defined (2025-10-30)
+**Implementation**: Phase 2 (infrastructure)
+
+### When Routing is Needed
+
+**Direct invocation (NO routing)**:
+- ✅ CLI: `tinyarms lint file.ts` → Knows skill = code-linting
+- ✅ Scheduler: Reads config.yaml → Knows which skill
+- ✅ GUI: User selects from menu → Knows which skill
+
+**Ambiguous requests (routing needed)**:
+- ❌ "help me with this file" → skill-registry routes via embeddings
+
+### 1. CLI Handler (`src/activation/cli-handler.ts`)
+
+**Flow**:
+```
+tinyarms lint file.ts
+  ↓
+Parse: command="lint", args={file}
+  ↓
+Map: "lint" → "code-linting"
+  ↓
+Load: skills/code-linting/index.ts
+  ↓
+Execute: execute({file})
+```
+
+**No routing** - Direct command mapping
+
+### 2. Scheduler (`src/core/scheduler.ts`)
+
+**Flow**:
+```
+On startup: Read all config.yaml
+  ↓
+Find: activation.automated = true
+  ↓
+Schedule: cron OR file watchers
+  ↓
+On trigger: Execute skill directly
+  ↓
+Log to SQLite
+```
+
+**No routing** - Config specifies skill
+
+### 3. GUI Handler (`src/activation/gui-handler.ts`)
+
+**Status**: Future (SwiftUI menu bar)
+
+**Flow**:
+```
+User clicks menu → Selects skill → Execute directly
+```
+
+**No routing** - User chooses skill
+
+### 4. Ambiguous Request Handler
+
+**Flow**:
+```
+Input: "help me with this file"
+  ↓
+skill-registry.route(input)
+  ↓
+Extract all SKILL.md descriptions
+  ↓
+embeddinggemma: Semantic match
+  ↓
+Return: Best matching skill name
+  ↓
+Load + execute skill
+```
+
+**Uses routing** - Doesn't know skill upfront
+
+---
+
 ## Industry Validation
 
 **90% aligned** with industry best practices (FrugalGPT, RouteLLM, GitHub Copilot).
 
 **See research/01-industry-validation.md for complete analysis** (25+ papers, 8 projects, 6 case studies)
 
-## Skills (Quick Reference)
+## Skills (Implementation Status)
 
-| Skill | Model | Speed | Use Case | Details |
-|-------|-------|-------|----------|---------|
-| code-linting-fast | Qwen2.5-Coder-3B | 2-3s | Pre-commit hooks | 03-SKILLS.md:7-28 |
-| code-linting-deep | Qwen2.5-Coder 7B | 10-15s | Weekly scans | 03-SKILLS.md:30-63 |
-| file-naming | Gemma 3 4B | 2-4s | Batch rename | 03-SKILLS.md:65-95 |
-| markdown-analysis | Gemma 3 4B | 2-4s | Track .specify/ | 03-SKILLS.md:97-121 |
-| audio-actions | Gemma 3 4B | 3-5s | Voice → actions | 03-SKILLS.md:123-146 |
+| Skill | Status | Model | Use Case |
+|-------|--------|-------|----------|
+| code-linting | Phase 1 (SKILL.md generated) | Qwen2.5-Coder-3B | Pre-commit hooks |
+| file-naming | Planned (Phase 3) | Gemma 3 4B | Batch rename |
+| markdown-analysis | Planned (Phase 3) | Gemma 3 4B | Track .specify/ |
+| audio-actions | Planned (Phase 3) | Gemma 3 4B | Voice → actions |
 
-**See 03-SKILLS.md for detailed skill configuration**
+**Architecture details**: See [research/04-openskills-integration-decision.md](research/04-openskills-integration-decision.md)
+**Skill configuration**: See [03-SKILLS.md](03-SKILLS.md)
 
 ## Next Steps
 

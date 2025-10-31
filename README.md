@@ -372,11 +372,29 @@ tinyArms doesn't replace your brain or your workflow. It's the **invisible AI as
 - ⏭️ Phase 2 implementation (Q2 2025): Prompt evolution system
 - ⏭️ Phase 3+ (Q3 2025): Full feature set (file-naming, markdown, audio)
 
-**Next Steps (Phase 1)**:
-1. Complete code-linting skill: Edit SKILL.md, create config.yaml + index.ts + executor.ts
-2. Build infrastructure: skill-registry (auto-discovery), cli-handler (command mapping)
-3. Validate with 2nd skill (file-naming or markdown-analysis)
-4. Add autonomous mode: scheduler, file watchers, batching
+**Next Steps**:
+
+**Phase 1 - First Skill (code-linting)**:
+1. Edit SKILL.md (replace TODOs, choose Workflow-Based pattern)
+2. Create config.yaml (model config, activation modes, prompts)
+3. Create index.ts (export execute + getConfig) + executor.ts (inference logic)
+4. Add references/constitution-excerpt.md, validate with quick_validate.py
+
+**Phase 2 - Infrastructure**:
+1. Build skill-registry.ts (auto-discover skills/, extract SKILL.md frontmatter)
+2. Build cli-handler.ts (map commands to skills, argument parsing)
+3. Build routing for ambiguous NL requests (keywords → embeddings)
+
+**Phase 3 - Validate with 2nd Skill**:
+1. Add file-naming or markdown-analysis skill
+2. Test skill-registry auto-discovery
+3. Extract duplicated patterns (if 2+ exist)
+
+**Phase 4 - Autonomous Mode**:
+1. Build scheduler.ts (read config.yaml, cron + file watchers)
+2. Add batching logic (process multiple files per execution)
+3. Add semantic caching (Level -1, FrugalGPT pattern)
+4. LaunchAgent integration (macOS native scheduling)
 
 **Contributors welcome** once implementation starts. Perfect time to explore the architecture and prepare.
 

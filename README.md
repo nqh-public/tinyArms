@@ -372,6 +372,12 @@ tinyArms doesn't replace your brain or your workflow. It's the **invisible AI as
 - ⏭️ Phase 2 implementation (Q2 2025): Prompt evolution system
 - ⏭️ Phase 3+ (Q3 2025): Full feature set (file-naming, markdown, audio)
 
+**Next Steps (Phase 1)**:
+1. Complete code-linting skill: Edit SKILL.md, create config.yaml + index.ts + executor.ts
+2. Build infrastructure: skill-registry (auto-discovery), cli-handler (command mapping)
+3. Validate with 2nd skill (file-naming or markdown-analysis)
+4. Add autonomous mode: scheduler, file watchers, batching
+
 **Contributors welcome** once implementation starts. Perfect time to explore the architecture and prepare.
 
 ---

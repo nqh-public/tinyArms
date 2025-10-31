@@ -164,7 +164,7 @@ First launch:
 - `AppDelegate`: Menu bar + launch services
 - `SettingsView`: Tabbed UI for configuration
 - `SkillCard`: Reusable accordion component
-- `TinyArmsService`: CLI wrapper + state management
+- `TinyArmsService`: CLI handler interface + state management
 
 **Full 251-line implementation deleted** (lines 275-524). See Git history if needed.
 

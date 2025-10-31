@@ -232,6 +232,8 @@ skills/{name}/
 
 ### Interface (Flexible Per Skill)
 
+⚠️ **Design Spec** (Not Implemented): Interface signatures below are proposed. Exact implementation TBD during Phase 1.
+
 Each skill exports:
 ```typescript
 export async function execute(input: any): Promise<any>
@@ -256,7 +258,7 @@ description: Lint code against constitutional principles using Qwen2.5-Coder-3B
 - Direct lookup: CLI maps "lint" → "code-linting"
 - Semantic routing: Ambiguous requests match via description
 
-### config.yaml Schema
+### config.yaml Schema (Design Spec - Not Implemented)
 
 | Section | Purpose |
 |---------|---------|
@@ -265,6 +267,8 @@ description: Lint code against constitutional principles using Qwen2.5-Coder-3B
 | `schedule` | Automated execution (cron, watch_patterns, batch_size) |
 | `performance` | Resource limits (latency, memory, battery) |
 | `prompts` | System/user templates |
+
+⚠️ **Status**: Architecture design only. Exact field names, structure, and validation rules TBD during Phase 1 implementation.
 
 **Full schema**: See [research/04-openskills-integration-decision.md](research/04-openskills-integration-decision.md)
 
@@ -287,6 +291,8 @@ description: Lint code against constitutional principles using Qwen2.5-Coder-3B
 
 ### 1. CLI Handler (`src/activation/cli-handler.ts`)
 
+⚠️ **Design Flow** (Not Implemented): Flow below shows intended architecture. Actual implementation TBD.
+
 **Flow**:
 ```
 tinyarms lint file.ts
@@ -303,6 +309,8 @@ Execute: execute({file})
 **No routing** - Direct command mapping
 
 ### 2. Scheduler (`src/core/scheduler.ts`)
+
+⚠️ **Design Flow** (Not Implemented): Flow below shows intended architecture. Actual implementation TBD.
 
 **Flow**:
 ```
@@ -331,6 +339,8 @@ User clicks menu → Selects skill → Execute directly
 **No routing** - User chooses skill
 
 ### 4. Ambiguous Request Handler
+
+⚠️ **Design Flow** (Not Implemented): Flow below shows intended architecture. Actual implementation TBD.
 
 **Flow**:
 ```

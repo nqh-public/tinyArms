@@ -98,6 +98,11 @@ tinyarms lint <file> [--constitution <path>]
 
 **Purpose**: Runtime configuration (NO triggers section - extracted from SKILL.md frontmatter)
 
+⚠️ **Design Spec** (Not Implemented): Exact field names, YAML structure, and defaults below are proposed design. Subject to change during Phase 1 implementation based on:
+- YAML parsing library constraints
+- Validation requirements discovered
+- TypeScript type safety needs
+
 ```yaml
 # Model configuration (tiered routing per skill)
 model:
@@ -151,6 +156,9 @@ skills/{name}/
 ```
 
 **index.ts interface** (flexible per skill):
+
+⚠️ **Design Spec** (Not Implemented): TypeScript signatures below are proposed. Implementation details TBD.
+
 ```typescript
 export async function execute(input: any): Promise<any>
 export function getConfig(): SkillConfig
@@ -192,7 +200,7 @@ export function getConfig(): SkillConfig
 
 ### Direct Invocation (No Routing)
 
-**CLI Mode**:
+**CLI Mode** (Design Flow - Not Implemented):
 ```
 tinyarms lint file.ts
   ↓
@@ -205,7 +213,7 @@ Execute: skills/code-linting/executor.ts
 Return: JSON violations
 ```
 
-**Scheduled Mode**:
+**Scheduled Mode** (Design Flow - Not Implemented):
 ```
 scheduler reads config.yaml (activation.automated = true)
   ↓
@@ -228,6 +236,8 @@ Falls back to CLI mode (direct)
 ```
 
 ### Ambiguous Requests (Routing Needed)
+
+⚠️ **Design Flow** (Not Implemented):
 
 ```
 User: "help me with this file"

@@ -141,11 +141,24 @@ tinyArms isn't a chatbot. It's designed for **invisible automation**:
 
 #### Core Skills
 
-1. **code-linting-fast** - Pre-commit hook, catches hardcoded colors/magic numbers, 2-3s, 85% accuracy
-2. **code-linting-deep** - Weekly scans, architectural violations, 10-15s, 95% accuracy (optional)
-3. **file-naming** - Watches Downloads folder, OCR screenshots, suggests 3 names, learns from choices
-4. **markdown-analysis** - Tracks changes in `.specify/memory/`, summarizes important updates every 2 hours
-5. **audio-actions** - MacWhisper transcription → structured action items (e.g., "remind me to..." → calendar event)
+**Skill Creation**: tinyArms adopts the [OpenSkills format](https://github.com/numman/openskills) via skill-creator workflow:
+
+```bash
+# Generate new skill structure
+python3 .claude/skills/skill-creator/scripts/init_skill.py skill-name --path apps/tinyArms/skills
+
+# Validate SKILL.md format
+python3 .claude/skills/skill-creator/scripts/quick_validate.py apps/tinyArms/skills/skill-name
+```
+
+**Two-phase approach**: idea.md (planning) → SKILL.md (implementation via skill-creator)
+
+**Current skills** (template/design stage):
+
+1. **code-linting** - Pre-commit hook, catches hardcoded colors/magic numbers, 2-3s, 85% accuracy (template generated, needs implementation)
+2. **file-naming** - Watches Downloads folder, OCR screenshots, suggests 3 names, learns from choices (planned)
+3. **markdown-analysis** - Tracks changes in `.specify/memory/`, summarizes important updates every 2 hours (planned)
+4. **audio-actions** - MacWhisper transcription → structured action items (e.g., "remind me to..." → calendar event) (planned)
 
 #### Example: Pre-Commit Linting
 
@@ -284,11 +297,12 @@ All documentation is organized by **implementation phase**:
 - **[03-INTEGRATIONS.md](docs/03-INTEGRATIONS.md)** - MacWhisper, Claude Code, MCP servers
 - **[03-jan-nano-4b-research-agent.md](docs/03-jan-nano-4b-research-agent.md)** - 10 use cases for MCP research agent
 
-### Phase 4: Design Ideations
+### Phase 4: Design Ideations & Research
 - **[04-direct-model-access.md](docs/04-direct-model-access.md)** - CLI/MCP for direct model access
 - **[04-launchagent-ideations.md](docs/04-launchagent-ideations.md)** - Automation strategies (LaunchAgents, cron)
 - **[04-mcp-server-ideations.md](docs/04-mcp-server-ideations.md)** - MCP server integration design
 - **[04-swiftui-app-ideations.md](docs/04-swiftui-app-ideations.md)** - GUI mockups (future)
+- **[research/04-openskills-integration-decision.md](docs/research/04-openskills-integration-decision.md)** - OpenSkills adoption, execution architecture (Skills → Routing → Activation)
 
 ### Phase 5: Advanced Systems (Prompt Evolution)
 - **[05-prompt-evolution-system.md](docs/05-prompt-evolution-system.md)** - Complete overview of self-improving prompts
@@ -352,6 +366,8 @@ tinyArms doesn't replace your brain or your workflow. It's the **invisible AI as
 
 **Timeline**:
 - ✅ Architecture complete (2025-10-27)
+- ✅ OpenSkills skill-creator adoption (2025-10-30)
+- ✅ Execution architecture documented (Skills → Routing → Activation)
 - ⏭️ Phase 1 implementation (Q1 2025): Tiered routing + code linting
 - ⏭️ Phase 2 implementation (Q2 2025): Prompt evolution system
 - ⏭️ Phase 3+ (Q3 2025): Full feature set (file-naming, markdown, audio)

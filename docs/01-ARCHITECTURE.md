@@ -6,54 +6,50 @@ For detailed implementation, model decisions, configuration, and integrations, s
 
 ---
 
-## System Overview
+## System Overview (Apple Ecosystem)
 
 ```
-Activation Modes (Entry Points)
-├─ CLI Handler (tinyarms lint file.ts) → Direct skill invocation
-├─ Scheduler (cron/file watchers) → Automated skill execution
-├─ GUI Handler (SwiftUI, future) → User-selected skill
-└─ Ambiguous Requests → Routing layer (optional)
+Platform Entry Points
+├─ macOS: LaunchAgent Daemon (FSEvents, always running)
+├─ iOS: Share Extension (user taps "Share → tinyArms")
+├─ iPadOS: Drag & Drop (batch file processing)
+└─ All: Shortcuts (Siri voice commands)
           ↓
-    Routing Layer (Optional - Ambiguous Requests Only)
-├─ skill-registry.ts (auto-discovers skills/)
-├─ Extracts SKILL.md frontmatter (name + description)
-├─ Hybrid routing: Keywords → embeddings
-└─ embeddinggemma:300m for semantic matching
+    Platform Detection (#if os(macOS) / os(iOS))
+├─ macOS → OllamaModelClient (Qwen, Gemma via HTTP)
+├─ iOS → CoreMLModelClient (SmolLM2, MobileBERT on-device)
+└─ CloudKit sync (share results cross-platform)
           ↓
-    Skills Layer (Self-Contained Execution Units)
-├─ code-linting/ (SKILL.md + config.yaml + index.ts + executor.ts)
-├─ file-naming/ (same structure)
-├─ markdown-analysis/ (same structure)
-└─ audio-actions/ (same structure)
+    Skill Registry (SkillRegistry.swift)
+├─ Auto-discovers skills/ directory
+├─ Parses SKILL.md frontmatter (name, description)
+├─ Routes: Direct (known skill) OR Semantic (embedding match)
           ↓
-    Tiered Routing (Per Skill, Configured in config.yaml)
-├─ Level -1: Semantic Cache (Phase 03, researched, 15-25% elimination)
-│  └─ Vector similarity >0.95 → return cached (<50ms)
-├─ Level 0: Deterministic rules (<1ms, 60-75% of tasks)
-│  └─ Keyword extraction, file type detection, kebab-case formatting
-├─ Level 1: embeddinggemma 300M (<100ms, 20-25% of tasks)
-│  └─ Semantic routing, intent classification (200MB)
-├─ Level 2: Small specialists (2-4s, 10-15% of tasks)
-│  ├─ Primary: Qwen2.5-Coder-3B-Instruct (1.9GB, code linting)
-│  ├─ Answer Consistency Scoring (Phase 02, researched)
-│  │  └─ Generate N=3, similarity >0.85 → accept, <0.85 → escalate
-│  ├─ Secondary: Qwen3-4B-Instruct (2.5GB, general tasks, optional)
-│  └─ Optional: Gemma 3 4B (2.3GB, file naming/markdown, reused from Cotypist)
-├─ Level 3: Deep analysis (10-15s, optional, <5% of tasks)
-│  └─ Qwen2.5-Coder 7B (4.7GB, architectural violations, weekly scans)
-└─ Industry Validation: 90% aligned (FrugalGPT, RouteLLM, GitHub Copilot patterns)
+    Skills Layer (TinyArmsKit protocols)
+├─ code-linting/ (SkillExecutor conformance)
+├─ visual-intelligence/ (Vision framework, iOS+macOS)
+├─ camera-intelligence/ (iOS only, AVFoundation)
+└─ voice-to-action/ (iOS only, Shortcuts integration)
           ↓
-    Storage
-├─ SQLite (task history, metrics, feedback)
-└─ Config (YAML per skill + global settings)
+    Tiered Routing (Per Skill, Platform-Aware)
+├─ Level -1: Semantic Cache (GRDB vector search, CloudKit)
+├─ Level 0: Swift rules (regex, pattern matching)
+├─ Level 1: MobileBERT (iOS, 100MB) OR embeddinggemma (macOS, 200MB)
+├─ Level 2a: Core ML (iOS: SmolLM2-360M, 250MB on-device)
+├─ Level 2b: Ollama (macOS: Qwen2.5-Coder-3B, 1.9GB)
+└─ Level 3: macOS only (Qwen2.5-Coder-7B, 4.7GB)
           ↓
-    Models (Ollama)
-├─ embeddinggemma:300m (200MB, semantic routing)
-├─ Qwen2.5-Coder-3B-Instruct (1.9GB, primary Level 2 for code)
-├─ Qwen3-4B-Instruct (2.5GB, secondary Level 2 for general tasks, optional)
-├─ Gemma 3 4B (2.3GB, optional Level 2, reused from Cotypist)
-└─ Qwen2.5-Coder 7B (4.7GB, optional Level 3 for deep analysis)
+    Storage (TinyArmsKit.Storage protocol)
+├─ Local: GRDB.swift (SQLite wrapper)
+├─ Sync: CloudKit (public database)
+└─ Cache: UserDefaults (skill configs)
+          ↓
+    Models (Platform-Specific)
+macOS (Ollama):                iOS/iPadOS (Core ML):
+├─ embeddinggemma:300m         ├─ MobileBERT (embeddings, 100MB)
+├─ Qwen2.5-Coder-3B            ├─ SmolLM2-360M (text, 250MB)
+├─ Qwen3-4B (optional)         ├─ CLIP ViT-B/32 (vision, 340MB)
+└─ Qwen2.5-Coder-7B (optional) └─ Apple FM ~3B (if macOS Sequoia+)
 ```
 
 ---
@@ -347,30 +343,63 @@ Skills are self-contained execution units. Each skill:
 - Implements core logic (executor.ts - model inference)
 - Exports standard interface (index.ts - execute + getConfig)
 
-### Structure (Per Skill)
+### Structure (Per Skill) - Swift
 
 ```
 skills/{name}/
-├── SKILL.md           # OpenSkills format (for agents)
-├── config.yaml        # Runtime config (model, activation, schedule)
-├── index.ts           # Exports execute() + getConfig()
-├── executor.ts        # Core logic (model loading, inference)
-├── scripts/           # Optional: Helper scripts
-├── references/        # Optional: Docs for context
-└── assets/            # Optional: Templates
+├── SKILL.md              # OpenSkills format (documentation)
+├── Package.swift         # Swift Package Manager
+├── Sources/
+│   ├── Executor.swift    # SkillExecutor conformance
+│   ├── Config.swift      # SkillConfig (Codable)
+│   └── Models.swift      # Input/output types
+├── Tests/
+│   └── ExecutorTests.swift
+└── Resources/            # Optional: prompts, templates
 ```
 
-### Interface (Flexible Per Skill)
+### Protocol (TinyArmsKit)
 
-⚠️ **Design Spec** (Not Implemented): Interface signatures below are proposed. Exact implementation TBD during Phase 1.
+```swift
+// TinyArmsKit/Sources/Protocols/SkillExecutor.swift
+public protocol SkillExecutor {
+    associatedtype Input: Codable
+    associatedtype Output: Codable
 
-Each skill exports:
-```typescript
-export async function execute(input: any): Promise<any>
-export function getConfig(): SkillConfig
+    func execute(_ input: Input) async throws -> Output
+    var config: SkillConfig { get }
+}
+
+// Example: code-linting skill
+struct CodeLintingExecutor: SkillExecutor {
+    typealias Input = FileInput
+    typealias Output = LintResult
+
+    func execute(_ input: FileInput) async throws -> LintResult {
+        // Level 0: Swift regex rules
+        if let result = try? rulesEngine.check(input.path) {
+            return result
+        }
+
+        // Level 2: Ollama (macOS) OR Core ML (iOS)
+        #if os(macOS)
+        return try await ollamaClient.lint(input)
+        #else
+        return try await coreMLClient.lint(input)
+        #endif
+    }
+
+    var config: SkillConfig {
+        SkillConfig(
+            name: "code-linting",
+            model: .qwen25Coder3B,  // macOS only
+            fallback: .smolLM2_360M // iOS fallback
+        )
+    }
+}
 ```
 
-**Note**: Input/output schemas are skill-specific (not standardized)
+**Note**: Associated types allow type-safe, skill-specific schemas
 
 ### SKILL.md Frontmatter = Routing Triggers
 

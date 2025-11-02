@@ -146,7 +146,220 @@ skills:
 
 ---
 
-## Level 3: Qwen2.5-Coder 7B ⚠️ OPTIONAL
+## Level 3: Qwen2.5-Coder 7B ⚠️ OPTIONAL (macOS Only)
+
+**Role:** Deep architectural analysis
+**Size:** 4.7GB
+**Speed:** 40-60 tokens/sec on M2 Air (~10-15s per file)
+
+**Installation:**
+```bash
+ollama pull qwen2.5-coder:7b
+```
+
+**When to install:**
+- Level 2 misses >10% violations
+- Need architectural enforcement (God objects, circular deps)
+- Weekly deep scans (not pre-commit, too slow)
+
+---
+
+## iOS/iPadOS Models (Core ML)
+
+### Overview
+
+iOS cannot run Ollama (no HTTP server background process). All models must be:
+- ✅ Bundled in app (Xcode Resources)
+- ✅ Converted to Core ML format (.mlpackage)
+- ✅ Small enough for App Store (200MB limit per model)
+
+### MobileBERT (Embeddings, Level 1)
+
+**Role:** Semantic routing (same as embeddinggemma on macOS)
+**Size:** 100MB
+**Speed:** <50ms on iPhone 14 Pro (Apple Neural Engine)
+
+**Conversion:**
+```python
+# PyTorch → Core ML
+import coremltools as ct
+model = ct.convert(
+    mobileBERT,
+    convert_to="mlprogram",
+    compute_units=ct.ComputeUnit.ALL  # CPU + GPU + ANE
+)
+model.save("MobileBERT.mlpackage")
+```
+
+**Usage:**
+```swift
+// TinyArmsKit/Sources/iOS/MobileBERTClient.swift
+import CoreML
+
+class MobileBERTClient: ModelClient {
+    let model: MobileBERT
+
+    func embed(_ text: String) async -> [Float] {
+        let input = MobileBERTInput(text: text)
+        let output = try await model.prediction(from: input)
+        return output.embedding  // 768-dim vector
+    }
+}
+```
+
+**Bundle:** Add MobileBERT.mlpackage to Xcode → Copy Bundle Resources
+
+---
+
+### SmolLM2-360M (Text Generation, Level 2)
+
+**Role:** On-device text generation (iOS equivalent of Qwen 3B)
+**Size:** 250MB (Q4 quantized)
+**Speed:** 10-15 tokens/sec on iPhone 14 Pro
+
+**Benchmarks:**
+- IFEval: 41% (instruction-following)
+- MMLU: 28.7% (general knowledge)
+- vs Qwen 3B: 60-70% accuracy (smaller, but works offline)
+
+**Conversion:**
+```python
+# HuggingFace → Core ML
+from transformers import AutoModel
+import coremltools as ct
+
+model = AutoModel.from_pretrained("HuggingFaceTB/SmolLM2-360M-Instruct")
+traced = torch.jit.trace(model, example_input)
+mlmodel = ct.convert(traced, convert_to="mlprogram")
+mlmodel.save("SmolLM2-360M.mlpackage")
+```
+
+**Usage:**
+```swift
+// TinyArmsKit/Sources/iOS/SmolLM2Client.swift
+class SmolLM2Client: ModelClient {
+    let model: SmolLM2_360M
+
+    func generate(prompt: String) async -> String {
+        let input = SmolLM2Input(prompt: prompt, maxTokens: 512)
+        let output = try await model.prediction(from: input)
+        return output.generatedText
+    }
+}
+```
+
+**Trade-off:**
+- ✅ Works offline, no internet
+- ❌ Lower accuracy (41% IFEval vs Qwen's 83%)
+
+---
+
+### CLIP ViT-B/32 (Vision, Level 2)
+
+**Role:** Image understanding (visual-intelligence skill)
+**Size:** 340MB
+**Speed:** <200ms on iPhone 14 Pro
+
+**Conversion:**
+```python
+# CLIP → Core ML
+from transformers import CLIPModel
+import coremltools as ct
+
+clip = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+vision_encoder = clip.vision_model
+mlmodel = ct.convert(vision_encoder, convert_to="mlprogram")
+mlmodel.save("CLIP-ViT-B32.mlpackage")
+```
+
+**Usage:**
+```swift
+// Skills/visual-intelligence/Sources/VisionEncoder.swift
+import Vision
+
+class CLIPVisionEncoder {
+    let model: CLIP_ViT_B32
+
+    func encode(image: UIImage) async -> [Float] {
+        let request = VNCoreMLRequest(model: try! VNCoreMLModel(for: model.model))
+        let handler = VNImageRequestHandler(cgImage: image.cgImage!)
+        try await handler.perform([request])
+        return request.results?.first?.featureVector ?? []
+    }
+}
+```
+
+**Bundle:** 340MB (largest iOS model, but fits App Store 2GB limit)
+
+---
+
+## Model Comparison: macOS vs iOS
+
+| Level | macOS (Ollama) | iOS (Core ML) | Quality Gap |
+|-------|---------------|---------------|-------------|
+| **Level 1** | embeddinggemma (200MB) | MobileBERT (100MB) | ~5% |
+| **Level 2** | Qwen2.5-Coder-3B (1.9GB) | SmolLM2-360M (250MB) | ~40% |
+| **Vision** | Qwen2-VL-2B (1.2GB) | CLIP ViT-B/32 (340MB) | ~20% |
+
+**Why iOS is less accurate:**
+- Smaller models (App Store size limits)
+- Quantization required (FP16/INT8 vs FP32)
+- No cloud fallback (100% on-device)
+
+**Why it's acceptable:**
+- iOS use cases simpler (screenshot rename vs code linting)
+- Speed > accuracy for mobile (200ms vs 2s)
+- User corrects mistakes (learning loop)
+
+---
+
+## Conversion Guide (PyTorch → Core ML)
+
+**Step-by-step:**
+
+1. **Export PyTorch model:**
+```python
+import torch
+model = load_model("SmolLM2-360M")
+torch.save(model.state_dict(), "model.pth")
+```
+
+2. **Convert to Core ML:**
+```python
+import coremltools as ct
+
+# Define input shape
+input_shape = ct.Shape(shape=(1, 512))  # Batch=1, seq_len=512
+
+# Convert
+mlmodel = ct.convert(
+    model,
+    inputs=[ct.TensorType(name="input_ids", shape=input_shape)],
+    convert_to="mlprogram",
+    compute_units=ct.ComputeUnit.ALL
+)
+
+# Add metadata
+mlmodel.short_description = "SmolLM2-360M for tinyArms"
+mlmodel.save("SmolLM2-360M.mlpackage")
+```
+
+3. **Add to Xcode:**
+- Drag .mlpackage to Xcode project
+- Target Membership: TinyArmsiOS
+- Copy to Bundle Resources: ✅
+
+4. **Generate Swift interface:**
+```bash
+# Xcode auto-generates:
+# - SmolLM2_360M.swift (model wrapper)
+# - SmolLM2Input.swift (input type)
+# - SmolLM2Output.swift (output type)
+```
+
+**Full tutorial:** See docs/05-COREML-MODELS.md (Batch 5)
+
+---
 
 **Role:** Deep architectural analysis, weekly scans  
 **Size:** 4.7GB  

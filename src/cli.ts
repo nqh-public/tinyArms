@@ -23,9 +23,13 @@ program
   .command('lint <file>')
   .description('Lint code against constitutional principles')
   .option('--constitution <path>', 'Custom constitution path')
-  .action(async (filePath: string, options: { constitution?: string }) => {
+  .option('--format <format>', 'Response format: concise or detailed', 'detailed')
+  .action(async (filePath: string, options: { constitution?: string; format?: string }) => {
     try {
       console.error('🦖 tinyArms constitutional linter\n');
+
+      // Validate format option
+      const format = options.format === 'concise' ? 'concise' : 'detailed';
 
       // 1. Check/pull model
       console.error('Checking Qwen2.5-Coder-3B...');
@@ -42,10 +46,10 @@ program
       const code = await fs.readFile(filePath, 'utf-8');
 
       // 4. Run linting
-      console.error('Analyzing code...');
+      console.error(`Analyzing code (${format} mode)...`);
       const client = new OllamaClient('qwen2.5-coder:3b-instruct');
       const linter = new Linter(client);
-      const result = await linter.lint(code, constitution);
+      const result = await linter.lint(code, constitution, format);
 
       // 5. Output JSON to stdout (stderr for logging above)
       console.log(JSON.stringify(result, null, 2));

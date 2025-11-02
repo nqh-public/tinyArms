@@ -12,12 +12,12 @@ import fs from 'fs/promises';
 
 import { Command } from 'commander';
 
-import { ConstitutionLoader } from './linting/constitution-loader';
-import { Linter } from './linting/linter';
-import { OllamaClient } from './linting/ollama-client';
-import { Logger } from './logging/logger';
+import { ConstitutionLoader } from './linting/constitution-loader.js';
+import { Linter } from './linting/linter.js';
+import { OllamaClient } from './linting/ollama-client.js';
+import { Logger } from './logging/logger.js';
 import { getSkillRegistry } from './skills/index.js';
-import { ModelChecker } from './utils/model-checker';
+import { ModelChecker } from './utils/model-checker.js';
 
 const program = new Command();
 

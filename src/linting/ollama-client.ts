@@ -1,10 +1,14 @@
 /**
  * Ollama SDK wrapper for model inference
  * Location: apps/tinyArms/src/linting/ollama-client.ts
+ *
+ * @what Lightweight wrapper around Ollama SDK for model inference
+ * @why Encapsulates Ollama API calls with error handling and type safety
+ * @exports OllamaClient class
  */
 
 import { Ollama } from 'ollama';
-import type { GenerateOptions } from '../types';
+import type { GenerateOptions } from '@/types.js';
 
 export class OllamaClient {
   private ollama = new Ollama();

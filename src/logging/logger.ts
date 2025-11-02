@@ -2,6 +2,10 @@
  * Main logger for tracking lint executions
  * Location: apps/tinyArms/src/logging/logger.ts
  *
+ * @what Dual-format logger for lint execution tracking (SQLite + JSONL)
+ * @why Provides queryable database + append-only audit trail for tinyArms CLI
+ * @exports Logger class, LogEntry interface
+ *
  * Logs to:
  * 1. SQLite database (~/.tinyarms/tinyarms.db)
  * 2. JSON Lines file (~/.tinyarms/logs/lint-history.jsonl)
@@ -9,8 +13,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { LintDatabase } from './db';
-import type { LintResult } from '../types';
+import { LintDatabase } from '@/logging/db.js';
+import type { LintResult } from '@/types.js';
 
 const LOGS_DIR = path.join(process.env.HOME!, '.tinyarms', 'logs');
 const JSONL_PATH = path.join(LOGS_DIR, 'lint-history.jsonl');

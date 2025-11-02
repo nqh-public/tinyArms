@@ -13,9 +13,9 @@
  * - Universal Reusability (can someone else use this?)
  */
 
-import type { LintResult, ResponseFormat } from '../types';
-import { countTokens, TOKEN_LIMITS, truncateResponse } from '../utils/token-counter';
-import { OllamaClient } from './ollama-client';
+import { OllamaClient } from '@/linting/ollama-client.js';
+import type { LintResult, ResponseFormat } from '@/types.js';
+import { countTokens, TOKEN_LIMITS, truncateResponse } from '@/utils/token-counter.js';
 
 
 const DEFAULT_CONFIDENCE = 0.85;

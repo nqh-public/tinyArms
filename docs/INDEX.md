@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 43 files • 20,548 total lines
+**Auto-generated** • 43 files • 20,634 total lines
 
 ---
 
@@ -62,9 +62,9 @@
 
 Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Better than cron for TinyArms because:
 
-### [🦖 TinyArms MCP Server - Ideations & Architecture](04-mcp-server-ideations.md)
+### [🦖 TinyArms MCP Server - Architecture](04-mcp-server-ideations.md)
 
-// docs/mcp-server-ideations.md # 🦖 TinyArms MCP Server - Ideations & Architecture
+// docs/mcp-server-ideations.md # 🦖 TinyArms MCP Server - Architecture
 
 ### [🦖 TinyArms Menu Bar App - SwiftUI Ideations](04-swiftui-app-ideations.md)
 

@@ -1,0 +1,75 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ====================================================================
+# tinyArms Pre-Commit Hooks (adapted from NQH monorepo)
+# Enforces Constitutional Principle XVII: Atomic Composability
+# ====================================================================
+
+# Run lint-staged first (ESLint, Prettier, TypeScript)
+pnpm exec lint-staged
+
+# ====================================================================
+# Core Quality Checks
+# ====================================================================
+
+# Check: Regenerate docs index if docs changed
+if git diff --cached --name-only | grep -q "^docs/.*\.md$"; then
+  echo "📚 Regenerating documentation index..."
+  node scripts/docs/generate-index.mjs
+  git add docs/INDEX.md
+fi
+
+# Check: Validate file headers
+echo "📝 Validating file headers..."
+STAGED_TS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|mjs)$' || true)
+if [ -n "$STAGED_TS" ]; then
+  node scripts/validate-headers.mjs --staged || exit 1
+fi
+
+# Check: File size limits (≤350 LOC for all files)
+echo "📏 Checking file size limits..."
+if [ -n "$STAGED_TS" ]; then
+  for file in $STAGED_TS; do
+    if [ -f "$file" ]; then
+      LINES=$(wc -l < "$file" | tr -d ' ')
+      if [ "$LINES" -gt 350 ]; then
+        echo "❌ BLOCKED: $file has $LINES lines (max 350)"
+        echo "See Constitution Principle XVII (Atomic Composability)"
+        exit 1
+      fi
+    fi
+  done
+fi
+
+# Check: Circular dependencies
+echo "🔄 Checking circular dependencies..."
+STAGED_DIRS=$(echo "$STAGED_TS" | xargs -I {} dirname {} | sort -u | head -5)
+if [ -n "$STAGED_DIRS" ]; then
+  npx madge --circular --extensions ts,tsx,mjs $STAGED_DIRS 2>/dev/null || {
+    echo "❌ Circular dependencies detected!"
+    echo "See Constitution Principle XVII (Atomic Composability)"
+    exit 1
+  }
+fi
+
+# Check: Semantic duplicate detection (Rule of 3)
+echo "🔍 Detecting semantic code duplication (Rule of 3)..."
+if [ -n "$STAGED_TS" ]; then
+  STAGED_DIRS_FOR_INSPECT=$(echo "$STAGED_TS" | xargs -I {} dirname {} | sort -u | tr '\n' ' ')
+  if [ -n "$STAGED_DIRS_FOR_INSPECT" ]; then
+    npx jsinspect \
+      --threshold 30 \
+      --min-instances 3 \
+      --ignore "test|spec|mock|node_modules" \
+      $STAGED_DIRS_FOR_INSPECT 2>/dev/null || {
+      echo "❌ BLOCKING: 3+ similar code patterns detected!"
+      echo "Constitutional Principle XVII (Law 3: Rule of 3) requires:"
+      echo "  - 3+ duplicate patterns MUST be extracted to shared code"
+      exit 1
+    }
+  fi
+fi
+
+echo ""
+echo "✅ All constitutional checks passed"

@@ -12,7 +12,8 @@
     "dev": "tsx watch src/cli.ts",
     "test": "vitest",
     "lint": "eslint src/**/*.ts",
-    "setup": "./scripts/setup.sh"
+    "setup": "./scripts/setup.sh",
+    "prepare": "husky"
   },
   "keywords": [
     "ai",
@@ -49,9 +50,23 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.10.6",
     "eslint": "^8.56.0",
+    "husky": "^9.1.7",
+    "jsinspect": "^0.12.7",
+    "lint-staged": "^16.2.6",
+    "madge": "^8.0.0",
+    "prettier": "^3.6.2",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^1.1.0"
+  },
+  "lint-staged": {
+    "*.{ts,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">=18.0.0"

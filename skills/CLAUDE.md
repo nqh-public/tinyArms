@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**Inherits From**: `/Users/huy/CODES/nqh/apps/tinyArms/CLAUDE.md`
+**Inherits From**: `/path/to/nqh-monorepo/apps/tinyArms/CLAUDE.md`
 
 Development standards for tinyArms skills in `apps/tinyArms/skills/`.
 

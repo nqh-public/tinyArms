@@ -14,7 +14,7 @@ skills:
   code-linting:
     enabled: true
     trigger: manual              # Only run when called by agents or humans
-    constitution_path: ~/.specify/memory/constitution.md
+    constitution_path: ~/.tinyarms/principles.md
     model: qwen2.5-coder:7b
     max_file_size_kb: 500
     description: "Constitutional code review against your principles"

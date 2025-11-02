@@ -61,8 +61,8 @@ Run when files appear in specific directories.
 ```xml
 <key>WatchPaths</key>
 <array>
-    <string>/Users/huy/Downloads</string>
-    <string>/Users/huy/Desktop</string>
+    <string>~/Downloads</string>
+    <string>~/Desktop</string>
 </array>
 
 <!-- Debounce: Wait 5 seconds before triggering -->
@@ -442,7 +442,7 @@ If plist paths come from user input:
 <string>$USER_INPUT</string>
 
 # Good: Validate and sanitize
-<string>/Users/huy/Downloads</string>
+<string>~/Downloads</string>
 ```
 
 ### 3. Log Files

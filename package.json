@@ -23,8 +23,16 @@
     "claude-code",
     "macos"
   ],
-  "author": "huy",
+  "author": "Ngo Quoc Huy <repo@ngoquochuy.co>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nqh-public/tinyArms.git"
+  },
+  "homepage": "https://github.com/nqh-public/tinyArms#readme",
+  "bugs": {
+    "url": "https://github.com/nqh-public/tinyArms/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "better-sqlite3": "^9.2.2",

@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
+import { promisify } from 'util';
+import { describe, it, expect, beforeAll } from 'vitest';
 
 const execAsync = promisify(exec);
 
@@ -15,8 +15,9 @@ describe('tinyarms lint command', () => {
   });
 
   it('should lint file and return JSON output', async () => {
+    const principlesPath = path.join(__dirname, '../fixtures/test-principles.md');
     const { stdout } = await execAsync(
-      `cd /Users/huy/CODES/nqh/apps/tinyArms && npx tsx src/cli.ts lint ${testFile}`
+      `cd ${process.cwd()} && npx tsx src/cli.ts lint ${testFile} --constitution ${principlesPath}`
     );
 
     const json = JSON.parse(stdout);

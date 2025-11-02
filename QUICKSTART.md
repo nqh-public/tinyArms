@@ -65,7 +65,7 @@ ollama pull qwen3:4b
 ```bash
 # Create Modelfile pointing to Cotypist's model
 cat > Modelfile << 'EOF'
-FROM /Users/huy/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
+FROM ~/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
 EOF
 
 # Register with Ollama (symlink, not copy)

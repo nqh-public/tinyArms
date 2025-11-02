@@ -12,7 +12,7 @@ Super lightweight. Designed to be invisible. Learns from your preferences. Grows
 
 ## ⚠️ Status: Early Development (~15% Implemented)
 
-**What works**: Core infrastructure (constitution loading, Ollama client, CLI framework, SQLite logging).
+**What works**: Core infrastructure (design principles loading, Ollama client, CLI framework, SQLite logging).
 
 **What doesn't**: Tiered routing, file naming, markdown analysis, audio actions, prompt evolution system.
 
@@ -27,13 +27,13 @@ Most documentation describes the **architecture design**, not working features. 
 ## ✅ What Works Now (v0.1.0)
 
 **Implemented** (Week 1-2, 2025-10-30):
-- ✅ Constitution loading from `.specify/memory/constitution.md`
+- ✅ Design principles loading from `~/.tinyarms/principles.md`
 - ✅ Ollama model validation (`qwen2.5-coder:3b` availability check)
 - ✅ SQLite logging/metrics database
 - ✅ CLI framework (`tinyarms lint [file]`)
 - ⚠️ Code linting (infrastructure ready, rule detection needs fixing)
 
-**Tests**: 7/10 passing (constitution loader, model checker, Ollama client work)
+**Tests**: 6/10 passing (principles loader, model checker, Ollama client work)
 
 **Not Implemented** (design only):
 - ❌ Tiered routing (Level 0-3 system)

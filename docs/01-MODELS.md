@@ -122,7 +122,7 @@ ollama pull qwen3:4b
 **Installation (reuse Cotypist):**
 \`\`\`bash
 cat > Modelfile << 'EOF'
-FROM /Users/huy/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
+FROM ~/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
 EOF
 ollama create gemma3-4b -f Modelfile
 \`\`\`

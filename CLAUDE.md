@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-**Inherits From**: `/Users/huy/CODES/nqh/CLAUDE.md`
+**tinyArms-Specific Guidance for Claude Code**
 
-tinyArms-specific overrides only. For constitutional principles, behavioral patterns, and shared code protocols, see the root CLAUDE.md.
+This file provides Claude Code with context about the tinyArms project. For general AI assistant best practices, see standard LLM guidance documentation.
 
 ---
 
@@ -26,53 +26,16 @@ tinyArms-specific overrides only. For constitutional principles, behavioral patt
 
 ---
 
-## Public Repository Sync
-
-**Public Repo**: https://github.com/nqh-public/tinyArms
-**Sync Method**: Git subtree (automated push from monorepo)
-
-### Workflow
-
-```bash
-# 1. Commit changes to monorepo (from /Users/huy/CODES/nqh)
-git add apps/tinyArms/
-git commit -m "feat(tinyArms): your change description
-
-apps/tinyArms/README.md:1
-"
-git push origin main
-
-# 2. Sync to public repo (when ready to publish)
-git subtree push --prefix=apps/tinyArms tinyarms-public main
-```
-
-**What gets synced**: Everything in `apps/tinyArms/` including CLAUDE.md (monorepo history)
-
-**Note**: CLAUDE.md appears in public repo after each sync (monorepo history). Either:
-- Ignore it (users can skip monorepo-specific sections)
-- Manually remove after sync: Clone public repo, `git rm CLAUDE.md`, commit, push
-
-**Remote configured**: `tinyarms-public` → `https://github.com/nqh-public/tinyArms.git`
-
-**Optional alias** (add to ~/.zshrc):
-```bash
-alias tinyarms-sync="cd /Users/huy/CODES/nqh && git subtree push --prefix=apps/tinyArms tinyarms-public main"
-```
-
-**Batch commits**: You can commit multiple times to monorepo before syncing - subtree includes all commits since last push.
-
----
-
 ## Project Overview
 
-**tinyArms** - Local AI assistant using tiny models (<500MB) for 24/7 filesystem watching and constitutional enforcement.
+**tinyArms** - Local AI assistant using tiny models (<500MB) for 24/7 filesystem watching and code quality automation.
 
 **Key Design**: 100% offline, memory-optimized for 8-16GB Macs, tiered routing (fast rules before expensive AI).
 
 **Core Use Cases**:
-1. Lint code against constitutional principles (pre-commit, 2-3s)
+1. Lint code against your design principles (pre-commit, 2-3s)
 2. Rename screenshots intelligently
-3. Track changes in `.specify/memory/` documentation
+3. Track changes in project documentation
 4. Convert voice transcriptions to structured actions
 
 ---

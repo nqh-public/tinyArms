@@ -115,7 +115,7 @@ node apps/tinyArms/src/mcp/server.ts
   "mcpServers": {
     "tinyarms": {
       "command": "node",
-      "args": ["/Users/huy/CODES/nqh/apps/tinyArms/src/mcp/server.ts"]
+      "args": ["/path/to/tinyarms/src/mcp/server.ts"]
     }
   }
 }

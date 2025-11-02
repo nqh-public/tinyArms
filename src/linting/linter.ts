@@ -13,9 +13,9 @@
  * - Universal Reusability (can someone else use this?)
  */
 
+import type { LintResult, ResponseFormat } from '../types';
+import { countTokens, TOKEN_LIMITS, truncateResponse } from '../utils/token-counter';
 import { OllamaClient } from './ollama-client';
-import type { LintResult, ResponseFormat } from '@/tinyArms/src/types';
-import { countTokens, TOKEN_LIMITS, truncateResponse } from '@/tinyArms/src/utils/token-counter';
 
 
 const DEFAULT_CONFIDENCE = 0.85;
@@ -82,7 +82,7 @@ FOCUS ON:
 3. **Principle I: Universal Reusability**: Is this code reusable by others or too app-specific?
 4. **Principle IV: Zero Invention Policy**: New patterns without approval (design tokens, conventions)
 
-Constitution excerpt (full version at ~/.specify/memory/constitution.md):
+Design principles excerpt (full version at ~/.tinyarms/principles.md):
 ${excerpt}
 
 IGNORE (pre-commit already handles):
@@ -102,7 +102,7 @@ Return JSON format:
       "message": "<specific issue>",
       "severity": "error" | "warning",
       "principle": "Principle III: Architecture-First Development",
-      "constitutionalRef": ".specify/memory/constitution.md:151-202",
+      "constitutionalRef": "~/.tinyarms/principles.md:151-202",
       "fix": {
         "action": "<what to do>",
         "suggestions": ["<specific fix 1>", "<specific fix 2>"],

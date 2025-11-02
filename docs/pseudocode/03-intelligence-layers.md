@@ -6,12 +6,12 @@
 ```
 FLOWCHART: Determine file type from rules
 
-INPUT: /Users/huy/Downloads/design-mockup.fig
+INPUT: ~/Downloads/design-mockup.fig
 
 1. Extract metadata
    - ext = path.extname() → ".fig"
    - fileName = path.basename() → "design-mockup.fig"
-   - dirPath = path.dirname() → "/Users/huy/Downloads"
+   - dirPath = path.dirname() → "~/Downloads"
 
 2. Loop through configured file type rules
    FOR EACH rule IN config.rules.file_types

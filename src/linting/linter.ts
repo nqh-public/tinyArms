@@ -2,6 +2,10 @@
  * Main linting logic using constitutional principles
  * Location: apps/tinyArms/src/linting/linter.ts
  *
+ * @what Constitutional code linter focusing on principles NOT enforced by pre-commit
+ * @why Pre-commit handles TypeScript/ESLint/file-size; this catches architectural anti-patterns
+ * @exports Linter class
+ *
  * Focuses on principles NOT enforced by pre-commit:
  * - Principle III: Architecture-First (search npm before custom code)
  * - Principle IV: Zero Invention (approval before new patterns)
@@ -10,8 +14,12 @@
  */
 
 import { OllamaClient } from './ollama-client';
-import type { LintResult, ResponseFormat } from '../types';
-import { countTokens, truncateResponse, TOKEN_LIMITS } from '../utils/token-counter';
+import type { LintResult, ResponseFormat } from '@/tinyArms/src/types';
+import { countTokens, TOKEN_LIMITS, truncateResponse } from '@/tinyArms/src/utils/token-counter';
+
+
+const DEFAULT_CONFIDENCE = 0.85;
+const CONSTITUTION_EXCERPT_CHARS = 2000; // ~500 tokens
 
 export class Linter {
   constructor(private client: OllamaClient) {}
@@ -38,7 +46,7 @@ export class Linter {
       let result: LintResult = {
         violations: parsed.violations || [],
         summary: parsed.summary || 'No violations found',
-        confidence: parsed.confidence || 0.85,
+        confidence: parsed.confidence || DEFAULT_CONFIDENCE,
         model: 'qwen2.5-coder:3b-instruct',
         latencyMs: Date.now() - startTime,
         tokenCount: countTokens(rawResponse),
@@ -59,11 +67,12 @@ export class Linter {
 
   private buildSystemPrompt(constitution: string, format: ResponseFormat): string {
     // Truncate constitution to fit context window (2000 chars = ~500 tokens)
-    const excerpt = constitution.slice(0, 2000);
+    const excerpt = constitution.slice(0, CONSTITUTION_EXCERPT_CHARS);
 
-    const verbosityGuidance = format === 'concise'
-      ? 'Return minimal JSON (summary + violation count only).'
-      : 'Return detailed JSON with actionable fixes and constitutional references.';
+    const verbosityGuidance =
+      format === 'concise'
+        ? 'Return minimal JSON (summary + violation count only).'
+        : 'Return detailed JSON with actionable fixes and constitutional references.';
 
     return `You are a constitutional code linter focusing on principles NOT enforced by automated tools.
 

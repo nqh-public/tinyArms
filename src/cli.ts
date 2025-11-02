@@ -2,15 +2,21 @@
 /**
  * tinyArms CLI entry point
  * Location: apps/tinyArms/src/cli.ts
+ *
+ * @what CLI interface for tinyArms constitutional linting
+ * @why Provides command-line access to linting with format control and model management
+ * @usage tinyarms lint <file> [--format concise|detailed] [--constitution <path>]
  */
 
-import { Command } from 'commander';
 import fs from 'fs/promises';
-import { ModelChecker } from './utils/model-checker';
+
+import { Command } from 'commander';
+
 import { ConstitutionLoader } from './linting/constitution-loader';
-import { OllamaClient } from './linting/ollama-client';
 import { Linter } from './linting/linter';
+import { OllamaClient } from './linting/ollama-client';
 import { Logger } from './logging/logger';
+import { ModelChecker } from './utils/model-checker';
 
 const program = new Command();
 

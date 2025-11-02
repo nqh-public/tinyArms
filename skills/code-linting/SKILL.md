@@ -1,6 +1,9 @@
 ---
-name: code-linting
-description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+name: code-linting-fast
+description: Constitutional code review for pre-commit hooks. Detects hardcoded colors, magic numbers, file size violations, import aliases, and missing line references. Uses Qwen2.5-Coder-3B for 2-3s analysis.
+token_budget: 15000
+supports_streaming: false
+batch_capable: true
 ---
 
 # Code Linting

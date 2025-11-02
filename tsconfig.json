@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
+    "module": "ESNext",
     "lib": ["ES2022"],
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "./dist",
@@ -18,7 +18,9 @@
     "types": ["node"],
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/tinyArms/src/types": ["./types.ts"],
+      "@/tinyArms/src/utils/token-counter": ["./utils/token-counter.ts"]
     }
   },
   "include": ["src/**/*"],

@@ -36,6 +36,22 @@ import {
 } from './tools/research-context.js';
 import { reviewCode, reviewCodeMeta } from './tools/review-code.js';
 
+// Skill registry for token budget enforcement
+import { getSkillRegistry } from '@/skills/index.js';
+
+/**
+ * Initialize skill registry on server start
+ * Enables token budget lookup for all tools
+ */
+let skillRegistry: ReturnType<typeof getSkillRegistry> | null = null;
+try {
+  skillRegistry = getSkillRegistry();
+  console.error(`✅ Loaded ${skillRegistry.getSkillNames().length} skills`);
+  console.error(`📊 Total token budget: ${skillRegistry.getTotalTokenBudget().toLocaleString()}`);
+} catch (error) {
+  console.error('⚠️ Failed to load skill registry:', error);
+}
+
 /**
  * Initialize MCP Server
  */
@@ -52,17 +68,34 @@ const server = new Server(
 );
 
 /**
- * Register available tools
+ * Register available tools with skill metadata
  *
  * 3 consolidated tools (replaces 10+ granular operations):
  * 1. review_code: Lint + constitutional checking + fixes
  * 2. organize_files: Rename + move + analyze operations
  * 3. research_context: Query + change detection + keyword extraction
+ *
+ * Token budgets from skill registry:
+ * - code-linting-fast: 15,000 tokens (review_code)
+ * - file-naming: 5,000 tokens (organize_files, when implemented)
+ * - markdown-analysis: 10,000 tokens (research_context, when implemented)
  */
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [reviewCodeMeta, organizeFilesMeta, researchContextMeta],
-  };
+  // Enhance tool descriptions with skill metadata
+  const tools = [reviewCodeMeta, organizeFilesMeta, researchContextMeta];
+
+  if (skillRegistry) {
+    // Annotate review_code with code-linting skill budget
+    const lintingSkill = skillRegistry.getSkill('code-linting-fast');
+    if (lintingSkill) {
+      tools[0] = {
+        ...reviewCodeMeta,
+        description: `${reviewCodeMeta.description} (Token budget: ${lintingSkill.metadata.token_budget.toLocaleString()})`,
+      };
+    }
+  }
+
+  return { tools };
 });
 
 /**

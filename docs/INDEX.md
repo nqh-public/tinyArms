@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 43 files • 19,991 total lines
+**Auto-generated** • 38 files • 18,391 total lines
 
 ---
 
@@ -14,13 +14,17 @@
 
 ## Core Documentation (14 files)
 
-### [00 - Getting Started](00-GETTING-STARTED.md)
-
-**Get tinyArms running in 10 minutes!**
-
 ### [00 - Overview](00-OVERVIEW.md)
 
 **What is tinyArms?**
+
+### [Swift Quick Start](00-SWIFT-QUICKSTART.md)
+
+```bash git clone repo open TinyArms.xcodeproj # Select TinyArmsMacOS scheme → Cmd+R # Grant permissions: Full Disk Access + Login Items ```
+
+### [Xcode Setup](00-XCODE-SETUP.md)
+
+- Xcode 15.0+ (macOS 14.0+) - Apple Developer account ($99/year for deploy, free for local)
 
 ### [01 - Architecture](01-ARCHITECTURE.md)
 
@@ -30,13 +34,9 @@
 
 **All model decisions and benchmarks**
 
-### [02 - Configuration](02-CONFIGURATION.md)
+### [Swift Architecture Overview](01-SWIFT-ARCHITECTURE-OVERVIEW.md)
 
-**Complete configuration guide with examples**
-
-### [02 - Installation](02-INSTALLATION.md)
-
-**Complete installation guide for all configurations**
+``` TinyArmsKit (Swift Package) ├─ Core/ (shared) │  ├─ Protocols/ │  │  ├─ ModelClient.swift │  │  ├─ SkillExecutor.swift │  │  └─ Storage.swift │...
 
 ### [02 - Troubleshooting](02-TROUBLESHOOTING.md)
 
@@ -73,18 +73,13 @@ Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Bette
 
 ---
 
-## Pseudocode (6 files)
+## Pseudocode (0 files)
 
-- **[01: Entry Flow (CLI → Config → Executor)](pseudocode/01-entry-flow.md)** - User invokes CLI command → loads config → initializes core components → runs skill
-- **[02: Routing Flow (Tiered Intelligence)](pseudocode/02-routing-flow.md)** - The TieredRouter evaluates each task through 3 levels of increasing complexity, escalating only when confidence is insufficient.
-- **[03: Intelligence Layers (L0, L1, L2)](pseudocode/03-intelligence-layers.md)** - ``` FLOWCHART: Determine file type from rules
-- **[04: Caching Flow (LRU Cache with Pattern Normalization)](pseudocode/04-caching-flow.md)** - Cache avoids redundant AI inference by remembering decisions for similar inputs.
-- **[05: Database Flow (SQLite Persistence)](pseudocode/05-database-flow.md)** - SQLite database stores task history, feedback, metrics, and cache entries for learning and analysis.
-- **[TinyArms Pseudocode Documentation](pseudocode/README.md)** - Complete architectural breakdown of tinyArms system in human-readable pseudocode.
+
 
 ---
 
-## Research (11 files)
+## Research (12 files)
 
 - **[Magic Numbers Audit - tinyArms Architecture](research/00-constants-audit.md)** - **Purpose**: Document source of all numeric constants in architecture design **Date**: 2025-10-27 **Status**: Design phase (0% implemented)
 - **[Industry Validation - tinyArms Architecture](research/01-industry-validation.md)** - **Status**: Researched (2025-10-29) **Sources**: 25+ academic papers, 8 open-source projects, 6 production case studies **Phase**: 01 (Current Stat...
@@ -97,6 +92,7 @@ Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Bette
 - **[Semantic Caching Design](research/03-semantic-caching-design.md)** - **Status**: Researched (2025-10-29) **Phase**: 03 (Semantic Caching Implementation) **Implementation**: Week 4 **Expected Impact**: 15-25% query el...
 - **[OpenSkills-Inspired Skills Architecture](research/04-openskills-integration-decision.md)** - **Research Date**: 2025-10-30 **Status**: Researched - Ready for Implementation **Phase**: 02 (Skills System Architecture) **Implementation**: Phas...
 - **[Plugin Architecture Patterns Research](research/04-plugin-architecture-patterns.md)** - **Research Date**: 2025-10-30 **Status**: Researched - Ready for Architecture Integration **Phase**: 02 (Architecture Planning for Skills System) *...
+- **[Apple Foundation Models Integration Analysis](research/06-apple-foundation-models-integration.md)** - **Status**: Researched (2025-11-02) **Phase**: 06 (Future Integration Possibilities) **Expected Impact**: Architecture learnings, potential hybrid ...
 
 ---
 

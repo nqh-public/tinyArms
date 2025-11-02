@@ -204,6 +204,136 @@ Activation Modes (Entry Points)
 
 ---
 
+## Token Budget Enforcement Strategy
+
+**Status**: Utilities implemented (2025-10-30), enforcement points documented (2025-11-01)
+**Implementation**: src/utils/token-counter.ts:1-66 (ready), integration pending
+
+### Overview
+
+Token budgets prevent context overflow and ensure predictable performance. Based on Anthropic's "Writing Tools for Agents" (2025-11-01), all responses MUST enforce maximum token limits.
+
+**Reference**: https://www.anthropic.com/engineering/writing-tools-for-agents
+
+### Budget Limits
+
+| Response Format | Target Tokens | Max Tokens | Use Case |
+|----------------|---------------|------------|----------|
+| **concise** | 5,000 | 25,000 | CLI quick checks, pre-commit hooks |
+| **detailed** | 15,000 | 25,000 | MCP tools, interactive debugging |
+| **streaming** | N/A | 25,000 | Long operations (batch linting) |
+
+**Hard Limit**: 25,000 tokens (Claude Code standard, enforced via truncation)
+
+### Enforcement Points
+
+#### 1. Linter (Level 2 AI)
+**File**: src/linting/linter.ts:52-60
+**Status**: ✅ Implemented
+
+```typescript
+// Truncate if budget exceeded
+if (estimatedTokens > tokenLimits.MAX) {
+  result.violations = truncateViolations(result.violations, format, tokenLimits)
+}
+```
+
+**Behavior**:
+- Concise: Return first 10 violations + summary
+- Detailed: Return first 20 violations with full context
+- Always include metadata: `truncated: true, total_violations: 47`
+
+#### 2. MCP Tools
+**File**: src/mcp/types.ts:118-123
+**Status**: ⚠️ Defined, not enforced
+
+```typescript
+export const TOKEN_LIMITS = {
+  MAX_RESPONSE: 25000,
+  CONCISE_TARGET: 5000,
+  DETAILED_TARGET: 15000
+}
+```
+
+**Integration Needed**: Apply `truncateResponse()` in review-code.ts, organize-files.ts, research-context.ts (when router connects)
+
+#### 3. Tiered Router (Future)
+**File**: src/router/tiered-router.ts (not implemented)
+**Status**: ❌ Design only
+
+**Expected Logic**:
+```typescript
+async route(input: Input, format: ResponseFormat) {
+  const result = await levelN.execute(input)
+
+  if (countTokens(result) > TOKEN_LIMITS.MAX_RESPONSE) {
+    return truncateResponse(result, format)
+  }
+
+  return { ...result, metadata: { tokens: countTokens(result) } }
+}
+```
+
+#### 4. Skill Registry (This Implementation)
+**File**: src/skills/registry.ts (in progress)
+**Status**: 🔄 Building now
+
+**Metadata Tracking**:
+```typescript
+interface SkillMetadata {
+  token_budget: number  // Per-skill limit (5k-25k)
+  // Used by CLI/MCP to enforce budgets BEFORE execution
+}
+```
+
+**Example**:
+- `code-linting-fast`: 15,000 tokens (detailed violations)
+- `file-naming`: 5,000 tokens (concise suggestions)
+- `markdown-analysis`: 10,000 tokens (change summaries)
+
+### Truncation Strategy
+
+**Utility**: src/utils/token-counter.ts:33-65
+
+**Rules**:
+1. **Preserve metadata** (latency, level, total count)
+2. **Slice arrays** (violations, suggestions, files)
+3. **Add truncation notice** (`truncated: true, showing: 10, total: 47`)
+4. **Maintain JSON structure** (no broken objects)
+
+**Example Output**:
+```json
+{
+  "violations": [ /* First 10 only */ ],
+  "metadata": {
+    "truncated": true,
+    "showing": 10,
+    "total": 47,
+    "tokens": 25000
+  }
+}
+```
+
+### Industry Validation
+
+- **Claude Code**: 25k token limit per tool response (Anthropic standard)
+- **FrugalGPT**: Token budgets reduce costs 98% (LLM Cascade paper)
+- **AutoMix**: Self-verification with token limits prevents waste
+
+### Testing Requirements
+
+**Unit Tests** (src/utils/token-counter.test.ts):
+- ✅ countTokens() accuracy within 5%
+- ✅ truncateViolations() preserves metadata
+- ✅ Token limits enforced (concise: 5k, detailed: 15k, max: 25k)
+
+**Integration Tests** (when router exists):
+- [ ] Level 2 response truncated at 25k
+- [ ] MCP tools enforce skill-specific budgets
+- [ ] CLI shows truncation warnings
+
+---
+
 ## Skills Layer
 
 **Status**: Architecture defined (2025-10-30)

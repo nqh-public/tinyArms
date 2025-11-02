@@ -65,7 +65,7 @@ ollama pull qwen3:4b  # 2.5GB
 **File naming (reuse from Cotypist):**
 \`\`\`bash
 cat > Modelfile << 'GEMMA_EOF'
-FROM /Users/huy/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
+FROM ~/Library/Application Support/app.cotypist.Cotypist/Models/gemma-3-4b-pt.i1-Q4_K_M.gguf
 GEMMA_EOF
 
 ollama create gemma3-4b -f Modelfile

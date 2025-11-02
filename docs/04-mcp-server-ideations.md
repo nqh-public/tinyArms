@@ -1,5 +1,8 @@
 // docs/mcp-server-ideations.md
-# 🦖 TinyArms MCP Server - Ideations & Architecture
+# 🦖 TinyArms MCP Server - Architecture
+
+**Status**: Redesigned (2025-11-01) based on Anthropic's "Writing Tools for Agents"
+**Reference**: https://www.anthropic.com/engineering/writing-tools-for-agents
 
 ## Overview
 
@@ -7,27 +10,32 @@ MCP (Model Context Protocol) server that exposes TinyArms capabilities as tools 
 
 ## Core Philosophy
 
-**Make TinyArms capabilities available to AI agents through standardized MCP protocol**
+**Make TinyArms capabilities available through agent-optimized workflows**
 
-- Agent calls tool → TinyArms processes → Returns structured result
-- No manual CLI needed - agents discover and use tools automatically
-- Leverage local AI models without hitting cloud APIs
+- Consolidated tools (not granular operations) → Reduces agent decision overhead
+- Token budget enforcement (25k max) → Prevents context waste
+- Response format control → Agents choose verbosity
+- Semantic identifiers → Principle names, not UUIDs
+- Actionable errors → Fix suggestions, not error codes
 
 ---
 
-## Available Tools
+## Available Tools (Consolidated Design)
 
-**5 MCP tools exposed** to Claude Code/Aider/Cursor:
+**3 consolidated tools** (replaces 10+ granular operations):
 
-| Tool | Purpose | Key I/O |
-|------|---------|---------|
-| `rename_file` | Intelligent file renaming | Input: file_path, context<br>Output: new_name, confidence, level |
-| `lint_code` | Constitutional code review | Input: file_path, constitution_path<br>Output: issues[], compliance |
-| `analyze_changes` | Markdown change detection | Input: directory, since<br>Output: changes[], suggestions[] |
-| `extract_keywords` | Intent from messy text | Input: text, context<br>Output: keywords[], action |
-| `query_system` | Query TinyArms state | Input: query (natural language)<br>Output: results[], summary |
+| Tool | Consolidates | Key Features |
+|------|--------------|--------------|
+| `review_code` | lint_code + check_constitution + get_violations + suggest_fixes | Constitutional review with actionable fixes in ONE call |
+| `organize_files` | rename_file + move_file + analyze_files | File operations with semantic context, dry-run default |
+| `research_context` | query_system + analyze_changes + extract_keywords | Multi-source search with time filtering |
 
-**Full schemas**: See lines 20-180 (deleted - detailed TypeScript definitions)
+**Why 3 tools, not 10?**
+- Anthropic research: "More tools don't guarantee better outcomes; too many options distract agents"
+- Each tool = complete workflow (agent doesn't need to chain 4 calls)
+- Token efficient: 1 consolidated call vs 4 separate round-trips
+
+**Implementation**: See `src/mcp/tools/` for full schemas
 
 ---
 
@@ -37,47 +45,69 @@ MCP (Model Context Protocol) server that exposes TinyArms capabilities as tools 
 ┌─────────────────────────────────────────────────────┐
 │           Claude Code / Aider / Cursor              │
 │                                                     │
-│  User: "Lint all TypeScript files"                 │
+│  User: "Review these files against Principle VI"   │
 └─────────────────┬───────────────────────────────────┘
-                  │ MCP Protocol (stdio/HTTP)
+                  │ MCP Protocol (stdio)
                   ↓
 ┌─────────────────────────────────────────────────────┐
 │              TinyArms MCP Server                    │
 │                                                     │
-│  Tools: [rename_file, lint_code, analyze_changes]  │
+│  Tools: [review_code, organize_files,              │
+│          research_context]                         │
 │                                                     │
 │  1. Receive tool call                              │
-│  2. Validate input                                 │
-│  3. Route to TieredRouter                          │
-│  4. Format output for agent                        │
+│  2. Validate input + enforce token budget          │
+│  3. Route to TieredRouter (Level 0-3)              │
+│  4. Format output (concise vs detailed)            │
+│  5. Return with metadata (latency, tier, tokens)   │
 └─────────────────┬───────────────────────────────────┘
                   │
                   ↓
 ┌─────────────────────────────────────────────────────┐
 │              TieredRouter                           │
 │                                                     │
-│  Level 0 → Level 1 → Level 2 → Fallback            │
+│  Level 0 (rules) → Level 1 (embedding) →           │
+│  Level 2 (AI) → Level 3 (research)                 │
 └─────────────────────────────────────────────────────┘
 ```
 
+**Key Improvements vs Original Design**:
+- 3 tools vs 5 (better consolidation)
+- Token budget enforcement (25k max, like Claude Code)
+- Response format enum (concise vs detailed)
+- Semantic principle names ("Principle VI: Brutal Honesty" not `principle_6`)
+- Metadata tracking (latency, tier used, tokens consumed)
+
 ---
 
-## Implementation Overview
+## Implementation
 
-**TypeScript + MCP SDK** (15-line sketch):
-```typescript
-// 1. Initialize MCP Server (name: 'tinyarms', version: '0.1.0')
-// 2. Register 5 tools (rename_file, lint_code, analyze_changes, extract_keywords, query_system)
-// 3. Route tool calls → TieredRouter
-// 4. Format output for agent consumption
-// 5. Start stdio transport
+**Location**: `apps/tinyArms/src/mcp/`
 
-// See 04-mcp-server-ideations.md:217-286 (deleted) for full TypeScript example
+**Files created**:
+- `server.ts` - Main MCP server with tool registration
+- `types.ts` - TypeScript interfaces, token limits, tier info
+- `tools/review-code.ts` - Consolidated code review tool
+- `tools/organize-files.ts` - Consolidated file organization tool
+- `tools/research-context.ts` - Consolidated research/query tool
+
+**Dependencies**:
+```json
+{
+  "@modelcontextprotocol/sdk": "^0.5.0"
+}
+```
+
+**Run**:
+```bash
+node apps/tinyArms/src/mcp/server.ts
 ```
 
 ---
 
-## Agent Integration Example (Claude Code Only)
+## Agent Integration
+
+### Claude Code
 
 ```json
 // ~/.config/claude-code/mcp.json
@@ -85,12 +115,68 @@ MCP (Model Context Protocol) server that exposes TinyArms capabilities as tools 
   "mcpServers": {
     "tinyarms": {
       "command": "node",
-      "args": ["/usr/local/bin/tinyarms", "mcp-server"],
-      "env": {"TINYARMS_CONFIG": "~/.config/tinyarms/config.yaml"}
+      "args": ["/path/to/tinyarms/src/mcp/server.ts"]
     }
   }
 }
 ```
+
+### Example Agent Workflow
+
+**Before (5 tool calls, ~8k tokens wasted)**:
+```typescript
+// Agent needs to lint code
+1. lint_code("src/auth.ts")              // 2k tokens
+2. check_constitution("Principle VI")    // 1.5k tokens
+3. get_violations()                      // 2k tokens
+4. suggest_fixes()                       // 2.5k tokens
+// Total: 4 round-trips, 8k tokens, ~6s latency
+```
+
+**After (1 tool call, ~2k tokens)**:
+```typescript
+// Agent uses consolidated tool
+review_code({
+  files: ["src/auth.ts"],
+  principles: ["Principle VI: Brutal Honesty"],
+  response_format: "concise"
+})
+// Returns: violations + fixes + metadata in ONE response
+// Total: 1 round-trip, 2k tokens, ~3s latency
+```
+
+**Savings**: 50% token reduction, 50% latency reduction, 75% fewer API calls
+
+---
+
+## Tool Design Principles (Anthropic)
+
+**Source**: https://www.anthropic.com/engineering/writing-tools-for-agents
+
+### 1. Consolidated Workflows
+- **Principle**: Combine related operations into single tools
+- **Applied**: `review_code` = lint + check + violations + fixes
+- **Benefit**: Agents make fewer decisions, reduce round-trips
+
+### 2. Token Budget Enforcement
+- **Principle**: Limit responses to 25k tokens (Claude Code standard)
+- **Applied**: `TOKEN_LIMITS.MAX = 25000` in types.ts
+- **Benefit**: Prevents context overflow, predictable costs
+
+### 3. Response Format Control
+- **Principle**: Let agents choose verbosity (`concise` vs `detailed`)
+- **Applied**: `response_format` enum in all tools
+- **Benefit**: Agents save tokens when possible, expand when needed
+
+### 4. Semantic Identifiers
+- **Principle**: Use human-readable names, not UUIDs
+- **Applied**: "Principle VI: Brutal Honesty" not `principle_6`
+- **Benefit**: Agents understand context better, make smarter decisions
+
+### 5. Actionable Errors
+- **Principle**: Provide fix suggestions, not error codes
+- **Applied**: `error.suggestion` in all responses
+- **Benefit**: Agents can self-recover, fewer user interventions
 
 ---
 

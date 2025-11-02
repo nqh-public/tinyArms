@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 43 files • 20,548 total lines
+**Auto-generated** • 43 files • 19,991 total lines
 
 ---
 
@@ -62,9 +62,9 @@
 
 Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Better than cron for TinyArms because:
 
-### [🦖 TinyArms MCP Server - Ideations & Architecture](04-mcp-server-ideations.md)
+### [🦖 TinyArms MCP Server - Architecture](04-mcp-server-ideations.md)
 
-// docs/mcp-server-ideations.md # 🦖 TinyArms MCP Server - Ideations & Architecture
+// docs/mcp-server-ideations.md # 🦖 TinyArms MCP Server - Architecture
 
 ### [🦖 TinyArms Menu Bar App - SwiftUI Ideations](04-swiftui-app-ideations.md)
 
@@ -102,7 +102,7 @@ Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Bette
 
 ## Model Research (10 files)
 
-- **[CLAUDE.md](model-research/CLAUDE.md)** - **Inherits From**: `/Users/huy/CODES/nqh/apps/tinyArms/CLAUDE.md`
+- **[CLAUDE.md](model-research/CLAUDE.md)** - **Inherits From**: `/path/to/nqh-monorepo/apps/tinyArms/CLAUDE.md`
 - **[EmbeddingGemma-300M: Proven Strengths & Weaknesses](model-research/embeddinggemma-300m.md)** - **Research Date**: 2025-10-28 **Source**: Google AI Model Card, Hugging Face (model page + blog), MTEB Leaderboard, Ollama Registry **Status**: Pro...
 - **[Gemma 3 4B: Proven Strengths & Weaknesses](model-research/gemma-3-4b.md)** - **Research Date**: 2025-10-28 **Source**: Google AI Model Card + Hugging Face + Ollama Library + arXiv Technical Report **Status**: Analysis complete
 - **[IBM Granite 4.0 Nano: Proven Strengths & Weaknesses](model-research/granite-4.0-nano.md)** - **Research Date**: 2025-10-28 **Source**: IBM official announcements, Hugging Face blog, benchmark aggregation via web search **Status**: Analysis ...

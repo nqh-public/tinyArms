@@ -1,6 +1,7 @@
 {
   "name": "tinyarms",
   "version": "0.1.0",
+  "type": "module",
   "description": "🦖 Tiny AI models with helping arms - local automation for humans and AI agents",
   "main": "dist/index.js",
   "bin": {
@@ -22,8 +23,16 @@
     "claude-code",
     "macos"
   ],
-  "author": "huy",
+  "author": "Ngo Quoc Huy <repo@ngoquochuy.co>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nqh-public/tinyArms.git"
+  },
+  "homepage": "https://github.com/nqh-public/tinyArms#readme",
+  "bugs": {
+    "url": "https://github.com/nqh-public/tinyArms/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "better-sqlite3": "^9.2.2",
@@ -32,6 +41,7 @@
     "js-yaml": "^4.1.0",
     "node-notifier": "^10.0.1",
     "ollama": "^0.5.0",
+    "yaml": "^2.8.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

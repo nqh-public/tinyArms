@@ -1,6 +1,7 @@
 /**
- * Loads and filters constitution for principles NOT enforced by pre-commit hook
- * Location: apps/tinyArms/src/linting/constitution-loader.ts
+ * @what Loads and filters design principles for AI-based code linting
+ * @why Pre-commit hooks handle syntax/formatting; this loads principles for semantic analysis
+ * @exports ConstitutionLoader class
  *
  * Pre-commit already enforces:
  * - TypeScript errors
@@ -17,7 +18,7 @@ import path from 'path';
 export class ConstitutionLoader {
   private defaultPath = path.join(
     process.env.HOME!,
-    'CODES/nqh/.specify/memory/constitution.md'
+    '.tinyarms/principles.md'
   );
 
   async load(customPath?: string): Promise<string> {

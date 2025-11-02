@@ -4,7 +4,7 @@
  */
 
 import { Ollama } from 'ollama';
-import type { GenerateOptions } from '../types';
+import type { GenerateOptions } from '../types.js';
 
 export class OllamaClient {
   private ollama = new Ollama();

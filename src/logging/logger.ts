@@ -9,8 +9,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { LintDatabase } from './db';
-import type { LintResult } from '../types';
+import { LintDatabase } from './db.js';
+import type { LintResult } from '../types.js';
 
 const LOGS_DIR = path.join(process.env.HOME!, '.tinyarms', 'logs');
 const JSONL_PATH = path.join(LOGS_DIR, 'lint-history.jsonl');

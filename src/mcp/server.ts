@@ -108,48 +108,89 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  * 4. Return structured response with metadata
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
+  const { name, arguments: args = {} } = request.params;
 
   try {
     switch (name) {
-      case 'review_code':
-        return await reviewCode(args);
+      case 'review_code': {
+        const result = await reviewCode(args as any);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
 
-      case 'organize_files':
-        return await organizeFiles(args);
+      case 'organize_files': {
+        const result = await organizeFiles(args as any);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
 
-      case 'research_context':
-        return await researchContext(args);
+      case 'research_context': {
+        const result = await researchContext(args as any);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
 
       default:
         return {
-          success: false,
-          error: {
-            code: 'UNKNOWN_TOOL',
-            message: `Tool "${name}" not found`,
-            suggestion:
-              'Available tools: review_code, organize_files, research_context',
-          },
-          metadata: {
-            latencyMs: 0,
-            level: 'Error',
-            tokensUsed: 0,
-          },
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                success: false,
+                error: {
+                  code: 'UNKNOWN_TOOL',
+                  message: `Tool "${name}" not found`,
+                  suggestion:
+                    'Available tools: review_code, organize_files, research_context',
+                },
+                metadata: {
+                  latencyMs: 0,
+                  level: 'Error',
+                  tokensUsed: 0,
+                },
+              }, null, 2),
+            },
+          ],
         };
     }
   } catch (error) {
     return {
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        suggestion: 'Check server logs for details. Verify input schema.',
-      },
-      metadata: {
-        latencyMs: 0,
-        level: 'Error',
-        tokensUsed: 0,
-      },
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: false,
+            error: {
+              code: 'INTERNAL_ERROR',
+              message: error instanceof Error ? error.message : 'Unknown error',
+              suggestion: 'Check server logs for details. Verify input schema.',
+            },
+            metadata: {
+              latencyMs: 0,
+              level: 'Error',
+              tokensUsed: 0,
+            },
+          }, null, 2),
+        },
+      ],
     };
   }
 });

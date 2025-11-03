@@ -2,105 +2,204 @@
 
 **tinyArms-Specific Guidance for Claude Code**
 
-This file provides Claude Code with context about the tinyArms project. For general AI assistant best practices, see standard LLM guidance documentation.
+Swift-native Apple ecosystem AI assistant (macOS + iOS + iPadOS). For general AI best practices, see standard LLM guidance.
 
 ---
 
-## ⚠️ Critical: Architecture Reference Only
+## ⚠️ Critical: Swift Migration Phase
 
-**Status**: 0% implemented - pseudo code and design documentation ONLY
+**Status**: Phase 1 - Swift foundation in progress
 
 **What exists**:
-- ✅ Complete architecture design (4-level tiered routing)
-- ✅ Type definitions (TypeScript interfaces)
-- ✅ Model research (embeddinggemma, Qwen variants decided)
-- ✅ Configuration examples (YAML structure)
+- ✅ Complete architecture research (tiered routing, industry validation)
+- ✅ Swift platform design (TinyArmsKit package structure)
+- ✅ Model decisions (macOS: Ollama/MLX, iOS: Core ML)
+- ✅ CloudKit sync architecture
+- ⏳ Xcode project (planned)
 
 **What does NOT exist**:
-- ❌ Working inference code
-- ❌ Actual model integration
-- ❌ Executable CLI commands
-- ❌ Database implementation
+- ❌ Working Swift implementation
+- ❌ Xcode workspace
+- ❌ Actual Core ML integration
+- ❌ iOS Share Extension
 
-**Before implementing ANY feature**: Confirm with user whether to build executable code or continue as reference architecture.
+**Before implementing**: Confirm Swift code vs design documentation.
 
 ---
 
 ## Project Overview
 
-**tinyArms** - Local AI assistant using tiny models (<500MB) for 24/7 filesystem watching and code quality automation.
+**tinyArms** - Native Apple ecosystem AI assistant using on-device models for automated tasks.
 
-**Key Design**: 100% offline, memory-optimized for 8-16GB Macs, tiered routing (fast rules before expensive AI).
+**Platforms**: macOS (menu bar daemon), iOS (Share Extension), iPadOS (Split View)
 
-**Core Use Cases**:
-1. Lint code against your design principles (pre-commit, 2-3s)
-2. Rename screenshots intelligently
-3. Track changes in project documentation
-4. Convert voice transcriptions to structured actions
+**Key Design**: 100% on-device (privacy-first), tiered routing (rules before AI), CloudKit sync (cross-device results).
+
+**Core Skills**:
+1. code-linting (macOS pre-commit, 2-3s)
+2. visual-intelligence (iOS screenshot OCR + naming)
+3. privacy-redaction (auto-detect PII before sharing)
+4. writing-tools (grammar, tone adjustment)
 
 ---
 
 ## Documentation
 
-**📚 Complete navigation**: See [docs/INDEX.md](docs/INDEX.md) (auto-generated from 40 files, organized by phase/category)
+**📚 Complete navigation**: [docs/INDEX.md](docs/INDEX.md) (auto-generated, 43 files)
+
+**Swift-specific**:
+- [00-SWIFT-QUICKSTART.md](docs/00-SWIFT-QUICKSTART.md) - Xcode setup (5 min)
+- [01-SWIFT-ARCHITECTURE-OVERVIEW.md](docs/01-SWIFT-ARCHITECTURE-OVERVIEW.md) - TinyArmsKit package
+- [02-MACOS-DAEMON.md](docs/02-MACOS-DAEMON.md) - LaunchAgent, FSEvents, menu bar
+- [03-IOS-PLATFORM.md](docs/03-IOS-PLATFORM.md) - Share Extension, Shortcuts, Widgets
 
 ---
 
-## Model Decisions
+## Model Stack
 
-**Current Status** (2025-10-27):
-- **Level 1**: embeddinggemma:300m (200MB) - semantic routing
-- **Level 2 Primary**: Qwen2.5-Coder-3B-Instruct (1.9GB) - code linting
-- **Level 2 Secondary**: Qwen3-4B-Instruct (2.5GB, optional) - general tasks
-- **Level 2 Specialists**: Gemma 3 4B (2.3GB, optional) - file naming, markdown, audio
-- **Level 3**: Qwen2.5-Coder 7B (4.7GB, optional) - deep analysis
-- **Research**: jan-nano-4b (4.3GB, optional) - MCP tool-use research
+### macOS (Daemon)
+- **Level 1**: MobileBERT embeddings (100MB, semantic routing)
+- **Level 2**: Qwen2.5-Coder-3B via Ollama or MLX Swift (1.9GB)
+- **Level 3**: Qwen2.5-Coder-7B (4.7GB, optional deep analysis)
 
-**Full model research**: See [docs/01-MODELS.md](docs/01-MODELS.md)
+### iOS/iPadOS (On-Device)
+- **Level 1**: MobileBERT Core ML (100MB, Apple Neural Engine)
+- **Level 2**: SmolLM2-360M Core ML (250MB, general tasks)
+- **Vision**: CLIP ViT-B/32 Core ML (340MB, image understanding)
+
+**Reference**: [docs/01-MODELS.md](docs/01-MODELS.md), [docs/05-COREML-MODELS.md](docs/05-COREML-MODELS.md)
 
 ---
 
 ## Scope Guard (tinyArms-Specific)
 
-**Reality check**: This app is 0% implemented (architecture only).
+**Reality check**: Swift implementation = Phase 1 (in progress), iOS = Phase 2 (planned Q2 2026).
 
 **Challenge requests**:
-- "Build the CLI" → "Full CLI or specific command for testing?"
-- "Add a skill" → "Pseudo code or executable implementation?"
-- "Integrate with MCP" → "Design documentation or working server?"
+- "Build the iOS app" → "Phase 2 design or start Phase 1 macOS first?"
+- "Add CloudKit sync" → "Architecture doc or wait for Phase 4?"
+- "Create Share Extension" → "Prototype or full implementation?"
 
-**Force minimum viable versions** before expanding scope.
+**Force MVP** before expanding scope.
 
 ---
 
 ## Platform Requirements
 
-**Hardware**: macOS 12.0+, 8GB RAM min (16GB recommended), 5-14GB storage
-**Dependencies**: Ollama, Node.js 18+
+### Development
+- **macOS**: 14.0+ (Sequoia preferred), Apple Silicon (M1+)
+- **Xcode**: 15.0+ (Swift 5.9+)
+- **Apple Developer**: Account required ($99/year for code signing)
 
-**Full details**: See [00-OVERVIEW.md - Hardware Requirements](docs/00-OVERVIEW.md#hardware-requirements)
+### Target Devices
+- **macOS**: 13.0+ (Ventura), 8GB RAM, 2-6GB storage
+- **iOS**: 17.0+, iPhone 12+ (A14 Neural Engine), 4GB+ RAM
+- **iPadOS**: 17.0+, iPad Pro 2020+ / Air 4+, 6GB+ RAM
+
+**Full details**: [README.md - Hardware Requirements](README.md#hardware-requirements)
+
+---
+
+## Tech Stack
+
+**Language**: Swift 5.9+ (async/await, actors, macros)
+**UI**: SwiftUI (macOS menu bar, iOS Share Extension, widgets)
+**Storage**: GRDB.swift (local SQLite) + CloudKit (sync)
+**ML**: Core ML (iOS), Ollama HTTP client or MLX Swift (macOS)
+**File Watching**: FSEvents (macOS native, not chokidar)
+**Automation**: Launch Daemons (macOS), Background Tasks (iOS)
+
+**Package Manager**: Swift Package Manager (not npm)
+
+---
+
+## Swift Conventions
+
+**Naming**:
+- Types: `PascalCase` (struct, class, enum, protocol)
+- Properties/functions: `camelCase`
+- Files: `PascalCase.swift` (match type name)
+- NO "I" prefix for protocols (use `protocol SkillExecutor`, not `ISkillExecutor`)
+
+**File Structure**:
+```
+TinyArmsKit/
+├─ Sources/
+│  ├─ TinyArmsCore/        # Shared logic
+│  ├─ TinyArmsMacOS/       # Daemon, FSEvents
+│  └─ TinyArmsiOS/         # Share Extension
+├─ Tests/
+│  ├─ CoreTests/           # XCTest
+│  └─ UITests/             # XCUITest
+└─ Package.swift           # Dependencies
+```
+
+**Testing**: XCTest (not Vitest), run via `swift test` or Xcode
+
+**Linting**: SwiftLint (not ESLint), run via Build Phase
 
 ---
 
 ## Quick Reference
 
-**Type**: Local AI assistant (offline, macOS-native)
-**Phase**: Architecture & research (0% implemented)
-**Tech stack**: Node.js + Ollama + SQLite + LaunchAgents (planned)
-**Unique trait**: Memory-optimized tiered routing (tiny models first)
+**Type**: Native Apple ecosystem app
+**Phase**: Phase 1 (Swift foundation, macOS daemon)
+**Platforms**: macOS 13+ (primary), iOS 17+ (Phase 2), iPadOS 17+ (Phase 3)
+**Unique trait**: Cross-device CloudKit sync, on-device privacy-first ML
 
-**CLI Examples**:
-```bash
-# Fast code linting (pre-commit)
-tinyarms run code-linting-fast src/ --json
+**Swift CLI Examples** (when implemented):
+```swift
+// macOS daemon (background, LaunchAgent)
+TinyArmsDaemon.main()
 
-# Status overview
-tinyarms status
-
-# Model management
-tinyarms models list
+// CLI tool (manual invocation)
+tinyarms-cli lint src/
+tinyarms-cli status
+tinyarms-cli models list
 ```
 
-**Full CLI reference**: See [01-ARCHITECTURE.md - Skills](docs/01-ARCHITECTURE.md#skills)
+**iOS Examples** (when implemented):
+```swift
+// Share Extension
+ShareViewController.handle(image: screenshot)
 
-**Before implementation**: Confirm executable code vs reference architecture with user.
+// Shortcuts
+TinyArmsIntent.executeLinting(files: selectedFiles)
+```
+
+---
+
+## Development Workflow
+
+### Phase 1 (Current): macOS Foundation
+1. Create Xcode project (TinyArms.xcodeproj)
+2. Setup TinyArmsKit package (shared code)
+3. Implement LaunchAgent daemon
+4. Add FSEvents file watching
+5. Integrate Ollama or MLX Swift (model client)
+6. Build menu bar app (SwiftUI + AppKit)
+
+### Phase 2 (Q2 2026): iOS MVP
+1. Add iOS app target
+2. Create Share Extension
+3. Integrate Core ML models (SmolLM2-360M, MobileBERT)
+4. Build result UI (SwiftUI)
+5. Basic CloudKit sync
+
+### Phase 3-4: iPadOS + App Store
+- Split View, Drag & Drop
+- Shortcuts, Widgets, Live Activities
+- Code signing, TestFlight, App Store submission
+
+**Reference**: [README.md - Development Status](README.md#development-status)
+
+---
+
+## Before Implementation
+
+**Always ask**:
+1. Is this Phase 1 (macOS) or Phase 2+ (iOS/iPadOS)?
+2. Swift code or architecture doc?
+3. MVP or full feature?
+
+**Don't assume** TypeScript/Node.js patterns apply - this is native Swift/Apple ecosystem.

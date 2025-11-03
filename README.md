@@ -158,35 +158,23 @@ open TinyArms.xcodeproj
 
 ## Core Skills
 
-### Implemented (v0.2.0)
 
 1. **code-linting** (macOS)
    - Pre-commit hook integration
    - Detects: hardcoded colors, magic numbers, file size >350 LOC
    - Speed: 2-3s per file (Qwen2.5-Coder-3B)
 
-### Planned (Phase 2-3)
 
-2. **visual-intelligence** (iOS/macOS)
-   - Screenshot OCR (PaddleOCR 8.6MB + Vision framework)
-   - Scene understanding (CLIP ViT-B/32 340MB)
-   - Use cases: Screenshot naming, receipt scanning, whiteboard capture
-
-3. **writing-tools** (iOS/macOS)
-   - Grammar/spelling (LanguageTool offline)
-   - Tone adjustment (professional, friendly, concise)
-   - Summarization (BART-large-CNN or SmolLM2)
-
-4. **privacy-redaction** (iOS/macOS)
+2. **privacy-redaction** (iOS/macOS)
    - Auto-detect PII (emails, phone numbers, API keys)
    - Blur before sharing (Share Extension integration)
    - Pre-commit hook (block commits with secrets)
 
-5. **context-aware-clipboard** (macOS)
+3. **context-aware-clipboard** (macOS)
    - Semantic search clipboard history (MobileBERT embeddings)
    - Auto-format on paste (URL → markdown, JSON → pretty-print)
 
-6. **file-naming** (iOS/macOS)
+4. **file-naming** (iOS/macOS)
    - Screenshot → descriptive names
    - Learns from your choices (prompt evolution)
 

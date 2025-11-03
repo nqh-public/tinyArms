@@ -1,3 +1,6 @@
+> **Swift Implementation (2025-11-02)**: Research applies to Swift architecture. TypeScript examples → Swift equivalents during Phase 1. Core algorithms unchanged. Reference: docs/01-SWIFT-ARCHITECTURE-OVERVIEW.md
+
+
 # Magic Numbers Audit - tinyArms Architecture
 
 **Purpose**: Document source of all numeric constants in architecture design

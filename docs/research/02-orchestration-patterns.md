@@ -1,3 +1,6 @@
+> **Swift Implementation (2025-11-02)**: Research applies to Swift architecture. TypeScript examples → Swift equivalents during Phase 1. Core algorithms unchanged. Reference: docs/01-SWIFT-ARCHITECTURE-OVERVIEW.md
+
+
 # Orchestration Patterns for Tiered AI Systems
 
 **Research Date**: 2025-10-29

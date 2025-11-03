@@ -1,8 +1,12 @@
 # tinyArms v0.1.0 Release Summary
 
+> **⚠️ DEPRECATED**: This release represents the TypeScript/Node.js prototype.
+> **Current Version**: See [RELEASE-v0.2.0.md](RELEASE-v0.2.0.md) for Swift implementation.
+> **Status**: No longer maintained. v0.2.0 is incompatible (complete rewrite).
+
 **Release Date**: 2025-11-02
-**Status**: Alpha (Functional with Prerequisites)
-**Implementation**: ~35% complete
+**Status**: Deprecated (TypeScript Prototype)
+**Implementation**: ~35% complete (abandoned for Swift rewrite)
 
 ---
 

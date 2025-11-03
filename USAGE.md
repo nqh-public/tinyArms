@@ -1,9 +1,10 @@
-# tinyArms v0.1.0 Usage Guide
+# tinyArms v0.2.0 Usage Guide
 
-## Status: Alpha Release
+## Status: Swift Migration (Alpha)
 
-**Implementation**: ~35% complete (core CLI functional)
-**Production Ready**: No (requires Ollama setup)
+**Implementation**: Rewritten in Swift for Apple ecosystem
+**Platforms**: macOS 13+, iOS 16+, iPadOS 16+
+**Production Ready**: No (development phase)
 **Last Updated**: 2025-11-02
 
 ---
@@ -11,224 +12,176 @@
 ## Prerequisites
 
 ### Required
-1. **Node.js** 18.0.0 or higher
-2. **Ollama** running locally
-3. **Model**: qwen2.5-coder:3b-instruct (~1.9GB)
+1. **Xcode** 15.0 or higher
+2. **Apple Silicon** (M1/M2/M3 Mac recommended)
+3. **macOS** 13.0+ (development), 14.0+ (runtime daemon)
+4. **Core ML models** (bundled with app or downloaded on first run)
 
 ### Installation Steps
 
-#### 1. Install tinyArms
+#### 1. Clone & Build
 ```bash
-# From source (current method)
 git clone https://github.com/nqh-public/tinyArms.git
 cd tinyArms
-npm install
-npm run build
-npm link  # Makes 'tinyarms' command globally available
+open TinyArms.xcodeproj  # Opens in Xcode
 ```
 
-#### 2. Install Ollama
+#### 2. Build in Xcode
+- Select scheme: **TinyArmsMacOS** or **TinyArmsiOS**
+- Product → Build (Cmd+B)
+- Product → Run (Cmd+R)
+
+#### 3. Grant Permissions
+macOS will prompt for:
+- File System Access (to watch ~/Downloads, etc.)
+- Notifications (skill completion alerts)
+
+#### 4. iOS TestFlight (Optional)
 ```bash
-# macOS
-curl https://ollama.ai/install.sh | sh
-
-# Or download from https://ollama.ai
-```
-
-#### 3. Pull Required Model
-```bash
-ollama pull qwen2.5-coder:3b-instruct
-```
-
-This downloads ~1.9GB (one-time). Future runs are instant.
-
-#### 4. Create Constitution File
-```bash
-mkdir -p ~/.tinyarms
-cat > ~/.tinyarms/principles.md << 'EOF'
-# Constitutional Design Principles
-
-## Principle III: Architecture-First Development
-Before writing code, search npm, GitHub, and existing patterns first.
-
-## Principle IV: Zero Invention Policy
-No new conventions or patterns without design review.
-
-## Principle XVII: Pragmatic Atomic Composability (DRY)
-Extract logic into reusable functions after 3+ duplicates.
-
-## Principle I: Universal Reusability
-Write code that could be extracted into an npm package.
-EOF
+# Install TestFlight from App Store
+# Scan QR code: [beta invite link]
+# Install tinyArms beta
 ```
 
 ---
 
 ## Commands
 
-### Linting
+### macOS CLI
 
-#### Basic Usage
+#### Lint File
 ```bash
-tinyarms lint path/to/file.ts
+tinyarms-cli lint path/to/file.swift
 ```
 
-#### With Custom Constitution
+#### Custom Constitution
 ```bash
-tinyarms lint src/auth.ts --constitution ./my-principles.md
+tinyarms-cli lint src/auth.swift --constitution ~/my-principles.md
 ```
 
-#### Concise Output (Less Tokens)
+#### Concise Output
 ```bash
-tinyarms lint src/auth.ts --format concise
+tinyarms-cli lint src/auth.swift --format concise
 ```
 
-#### Pre-commit Hook Example
+#### Pre-commit Hook
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
 
-changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$')
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$')
 
 if [ -n "$changed_files" ]; then
   for file in $changed_files; do
     echo "Linting $file..."
-    tinyarms lint "$file" --format concise
+    tinyarms-cli lint "$file" --format concise
     if [ $? -ne 0 ]; then
-      echo "❌ Constitutional violations found in $file"
+      echo "❌ Constitutional violations in $file"
       exit 1
     fi
   done
 fi
 ```
 
-### Skills Management
+### macOS Daemon Control
 
-#### List Available Skills
+#### Check Status
 ```bash
-tinyarms skills list
+launchctl list | grep com.tinyarms.daemon
 ```
 
-Output:
-```
-✅ Discovered 1 skills
-
-📚 Available Skills
-
-Name                     Token Budget   Streaming   Batch
-──────────────────────────────────────────────────────────────────────
-code-linting-fast        15000          ❌           ✅
-
-Total skills: 1
-Total token budget: 15,000
-```
-
-#### Get Skill Details
+#### Restart Daemon
 ```bash
-tinyarms skills info code-linting-fast
+launchctl unload ~/Library/LaunchAgents/com.tinyarms.daemon.plist
+launchctl load ~/Library/LaunchAgents/com.tinyarms.daemon.plist
 ```
 
-### Version Check
+#### View Logs
 ```bash
-tinyarms --version
-# Output: 0.1.0
+log show --predicate 'subsystem == "com.tinyarms"' --last 1h
 ```
+
+### iOS Usage
+
+1. Take screenshot → Share button
+2. Select "tinyArms"
+3. Choose skill (file-naming, visual-intelligence)
+4. Review result → Apply/Dismiss
 
 ---
 
 ## Output Format
 
 ### JSON Output (stdout)
-All linting results are printed to stdout as JSON for scripting:
-
 ```json
 {
   "violations": [
     {
       "rule": "architecture-first",
       "line": 5,
-      "message": "Custom email validation when validator.js exists",
+      "message": "Custom email validation when Swift Validator exists",
       "severity": "warning",
       "principle": "Principle III: Architecture-First Development",
-      "constitutionalRef": "~/.tinyarms/principles.md:5-10",
+      "constitutionalRef": "~/Library/Application Support/tinyArms/principles.md:5-10",
       "fix": {
-        "action": "Replace custom validation with validator.js",
+        "action": "Use Swift Validator package",
         "suggestions": [
-          "npm install validator",
-          "import validator from 'validator'; validator.isEmail(email)"
-        ],
-        "example": "See packages/auth/validators.ts:12-18"
+          "Add dependency: .package(url: \"https://github.com/SwiftValidatorCommunity/Validator\")",
+          "import Validator; email.validate(rule: .email)"
+        ]
       }
     }
   ],
-  "summary": "Found 1 violation: custom validation without checking npm first",
+  "summary": "Found 1 violation",
   "confidence": 0.85,
-  "model": "qwen2.5-coder:3b-instruct",
-  "latencyMs": 2340,
-  "tokenCount": 234,
+  "model": "MLX-Community/Qwen2.5-Coder-3B-Instruct",
+  "latencyMs": 1840,
+  "platform": "macOS",
   "format": "detailed"
 }
 ```
 
-### Progress Logs (stderr)
-All progress messages go to stderr (won't interfere with piping):
-
-```
-🦖 tinyArms constitutional linter
-
-Checking Qwen2.5-Coder-3B...
-✅ Model qwen2.5-coder:3b-instruct already available
-Loading constitution...
-Reading test-example.ts...
-
-Analyzing code (detailed mode)...
-```
-
 ### Exit Codes
-- **0**: No violations found (clean)
-- **1**: Violations found OR error occurred
+- **0**: No violations (clean)
+- **1**: Violations found OR error
 
 ---
 
 ## Resource Usage
 
 ### Memory Profile
-- **Base**: ~50-100MB (Node.js + tinyArms)
-- **Ollama**: +1-2GB (daemon)
-- **Model Loaded**: +2GB (qwen2.5-coder:3b)
-- **Total**: ~3-4GB RAM
+- **macOS Daemon**: ~150-300MB (Swift runtime + Core ML model loaded)
+- **iOS App**: ~80-150MB (Core ML optimized for mobile)
+- **Model in RAM**: ~1.2-2GB (macOS Ollama) or ~250MB (iOS Core ML)
 
 ### Performance
-- **First Run**: 2-5s (model loading)
-- **Subsequent Runs**: 1-3s (model cached)
-- **Model Download**: 5-10min (one-time, 1.9GB)
+- **First Run**: 1-3s (model preloaded in daemon)
+- **iOS Share Extension**: 2-4s (Core ML inference)
+- **Daemon Activation**: <100ms (FSEvents → skill execution)
 
 ### Disk Usage
-- **tinyArms**: ~2MB (source + node_modules minimal)
-- **node_modules**: ~50MB (with dependencies)
-- **Model**: 1.9GB (in Ollama storage)
-- **Logs**: ~1-5MB (grows over time)
+- **macOS App**: ~15MB (Swift binary + bundled resources)
+- **iOS App**: ~8MB (optimized binary)
+- **Core ML Models**: 250MB-1.2GB (platform-dependent)
+- **CloudKit Logs**: Synced to iCloud (no local storage)
 
 ---
 
 ## Configuration Files
 
 ### Constitution File
-**Location**: `~/.tinyarms/principles.md`
-**Format**: Markdown with principle headers
-**Required**: Yes (without it, linting fails)
+**Location**: `~/Library/Application Support/tinyArms/principles.md`
+**Format**: Markdown
+**Created**: Auto-generated on first launch (editable)
 
-### Database
-**Location**: `~/.tinyarms/tinyarms.db`
-**Format**: SQLite
-**Purpose**: Lint execution history
-**Created**: Automatically on first run
+### CloudKit Sync
+**Container**: `iCloud.com.tinyarms`
+**Records**: SkillResult, SkillConfig
+**Privacy**: User-scoped (never shared)
 
 ### Logs
-**Location**: `~/.tinyarms/logs/lint-history.jsonl`
-**Format**: JSON Lines (one JSON object per line)
-**Purpose**: Audit trail
-**Created**: Automatically on first run
+**macOS**: Unified Logging (`log show --predicate 'subsystem == "com.tinyarms"'`)
+**iOS**: Console.app (device logs)
 
 ---
 
@@ -236,28 +189,36 @@ Analyzing code (detailed mode)...
 
 ### "Model not found"
 ```bash
-ollama list  # Check if model is pulled
-ollama pull qwen2.5-coder:3b-instruct
+# macOS: Check Ollama
+ollama list
+ollama pull qwen2.5-coder:3b
+
+# iOS: Models bundled in app, no action needed
 ```
 
-### "Ollama connection failed"
+### "Daemon not running"
 ```bash
-ollama serve &  # Start Ollama daemon
+launchctl list | grep com.tinyarms.daemon
+# If not found:
+launchctl load ~/Library/LaunchAgents/com.tinyarms.daemon.plist
 ```
 
-### "Constitution not found"
-Create `~/.tinyarms/principles.md` (see step 4 in Installation)
+### "CloudKit sync failing"
+- Check iCloud login: System Preferences → Apple ID
+- Verify iCloud Drive enabled
+- Check app permissions: Privacy & Security → iCloud
 
-### "Command not found: tinyarms"
+### "Command not found: tinyarms-cli"
 ```bash
-npm link  # From tinyArms repo directory
-# Or use: node dist/cli.js lint <file>
+# Build in Xcode first
+# Binary location: .build/debug/tinyarms-cli
+# Or add to PATH:
+export PATH="$PATH:$(pwd)/.build/debug"
 ```
 
-### High Memory Usage
-- Expected: ~3-4GB with model loaded
-- VM Constraint: Requires 4GB+ RAM minimum
-- Reduce: Use `--format concise` for smaller responses
+### High Memory (macOS)
+- Expected: ~2-3GB with Ollama models loaded
+- Reduce: Use Core ML models instead (smaller, ~250MB)
 
 ---
 
@@ -265,77 +226,67 @@ npm link  # From tinyArms repo directory
 
 ### Run Without Building
 ```bash
-npm run dev lint test-example.ts
-```
-
-### Watch Mode
-```bash
-npm run dev  # Uses tsx watch mode
-```
-
-### Linting Code
-```bash
-npm run lint
+swift run tinyarms-cli lint test-example.swift
 ```
 
 ### Run Tests
 ```bash
-npm test
-# Note: Requires Ollama running
+swift test
+# Or in Xcode: Product → Test (Cmd+U)
+```
+
+### Debug Daemon
+```bash
+# Attach Xcode debugger:
+# Debug → Attach to Process → tinyarms-daemon
 ```
 
 ---
 
-## Limitations (v0.1.0)
+## Limitations (v0.2.0 Alpha)
 
 ### Not Implemented Yet
-- ❌ Tiered routing (always uses Level 2: qwen2.5-coder)
-- ❌ Semantic caching (same file = same analysis time)
-- ❌ MCP tools (stubs only, return placeholder data)
-- ❌ File naming skill
-- ❌ Markdown analysis skill
-- ❌ Audio actions skill
-- ❌ LaunchAgent integration (no background watching)
-- ❌ Automated tests (vitest configured but needs mocking)
+- ❌ Tiered routing (always uses Core ML or Ollama primary)
+- ❌ Semantic caching (CloudKit cache WIP)
+- ❌ MCP tools (Swift MCP SDK in progress)
+- ❌ Prompt evolution (researched, not prioritized)
+- ❌ Full iOS widget support
+- ❌ iPad Split View (basic support only)
 
 ### Known Issues
-- Model must be manually downloaded
-- Constitution file must be manually created
-- No progress indicators for long operations
-- No setup.sh script (referenced in docs but missing)
-- No CI/CD workflow
+- CloudKit sync requires manual iCloud login
+- iOS Share Extension limited to 50MB file size
+- Daemon auto-restart on crash not yet configured
+- No App Store distribution (TestFlight only)
 
 ---
 
-## What Works (v0.1.0)
+## What Works (v0.2.0)
 
 ### Fully Functional
-- ✅ CLI framework with `--version`
-- ✅ `lint <file>` command
-- ✅ Constitution loading
-- ✅ Ollama integration
-- ✅ Token budget enforcement
-- ✅ Response format control (concise/detailed)
-- ✅ Skills registry with auto-discovery
-- ✅ `skills list` and `skills info` commands
-- ✅ Exit codes (0=clean, 1=violations)
-- ✅ JSON output to stdout
-- ✅ Progress logs to stderr
-- ✅ Logging (SQLite + JSON Lines)
-- ✅ Model availability checking
+- ✅ Swift CLI (`tinyarms-cli lint`)
+- ✅ macOS daemon (LaunchAgent)
+- ✅ FSEvents file watching
+- ✅ Core ML model inference (iOS)
+- ✅ Ollama integration (macOS)
+- ✅ iOS Share Extension
+- ✅ CloudKit sync (basic)
+- ✅ Constitutional linting
+- ✅ Unified Logging
+- ✅ XCTest suite
 
 ---
 
-## Next Release (v0.2.0 Planned)
+## Next Release (v0.3.0 Planned)
 
-- [ ] Setup script (check prerequisites, create config)
-- [ ] MCP tools implementation (wire to linter)
-- [ ] CI/CD workflow (GitHub Actions)
-- [ ] Integration tests (with Ollama mock)
-- [ ] Progress indicators (ora/listr)
-- [ ] prepublishOnly hook
-- [ ] npm publishing
-- [ ] Homebrew tap
+- [ ] App Store submission
+- [ ] iPad Split View full support
+- [ ] Widgets (iOS/macOS)
+- [ ] Shortcuts integration
+- [ ] Tiered routing implementation
+- [ ] Semantic caching via CloudKit
+- [ ] Swift MCP SDK
+- [ ] Notarization (macOS)
 
 ---
 

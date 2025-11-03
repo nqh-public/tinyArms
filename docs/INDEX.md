@@ -1,6 +1,6 @@
 # tinyArms Documentation Index
 
-**Auto-generated** • 38 files • 18,391 total lines
+**Auto-generated** • 39 files • 19,515 total lines
 
 ---
 
@@ -12,7 +12,7 @@
 
 ---
 
-## Core Documentation (14 files)
+## Core Documentation (15 files)
 
 ### [00 - Overview](00-OVERVIEW.md)
 
@@ -38,6 +38,10 @@
 
 ``` TinyArmsKit (Swift Package) ├─ Core/ (shared) │  ├─ Protocols/ │  │  ├─ ModelClient.swift │  │  ├─ SkillExecutor.swift │  │  └─ Storage.swift │...
 
+### [macOS Daemon Architecture](02-MACOS-DAEMON.md)
+
+**Status**: Implementation guide for native macOS daemon **Platform**: macOS 14.0+ **Tech**: Swift, LaunchAgent, FSEvents, Ollama
+
 ### [02 - Troubleshooting](02-TROUBLESHOOTING.md)
 
 **Common issues and solutions**
@@ -46,29 +50,29 @@
 
 **MacWhisper, jan-nano-4b, Claude Code, MCP, LaunchAgent, and other tool integrations**
 
+### [iOS Platform Guide](03-IOS-PLATFORM.md)
+
+**Status**: Implementation guide for iOS app **Platform**: iOS 18.0+ **Tech**: SwiftUI, Share Extension, Core ML, Shortcuts
+
 ### [03 - Skills](03-SKILLS.md)
 
-**What each skill does**
+**What each skill does (Swift/Apple ecosystem)**
 
 ### [jan-nano-4b Use Cases for tinyArms Research Agent](03-jan-nano-4b-research-agent.md)
 
 **Research completed:** 2025-10-27 **Model:** jan-nano-4b (4.3GB, Q8 quantization) **Context:** 128K tokens **Role:** Level 2/3 research agent for ...
 
+### [iPadOS Platform Guide](04-IPADOS-PLATFORM.md)
+
+**Status**: Implementation guide for iPadOS app **Platform**: iPadOS 18.0+ **Tech**: SwiftUI, Split View, Drag & Drop, Pointer support
+
 ### [Direct Model Access API](04-direct-model-access.md)
 
 **Purpose**: Expose tinyArms models directly to coding agents (Claude Code, Aider, Cursor) for context-efficient operations
 
-### [🦖 TinyArms LaunchAgent Ideations](04-launchagent-ideations.md)
-
-Use macOS LaunchAgents for intelligent, battery-efficient task scheduling. Better than cron for TinyArms because:
-
 ### [🦖 TinyArms MCP Server - Architecture](04-mcp-server-ideations.md)
 
 // docs/mcp-server-ideations.md # 🦖 TinyArms MCP Server - Architecture
-
-### [🦖 TinyArms Menu Bar App - SwiftUI Ideations](04-swiftui-app-ideations.md)
-
-// docs/swiftui-app-ideations.md # 🦖 TinyArms Menu Bar App - SwiftUI Ideations
 
 
 ---
